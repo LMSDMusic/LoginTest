@@ -457,8 +457,9 @@
           sessionStorage.setItem("studentFirstName", data.firstName);
           sessionStorage.setItem("studentLastName",  data.lastName);
           sessionStorage.setItem("studentNumber",    studentNumber);
-          sessionStorage.setItem("studentGrade",     data.grade);
-          sessionStorage.setItem("studentClass",     data.class);
+          sessionStorage.setItem("studentGrade",      data.grade);
+          sessionStorage.setItem("studentClass",      data.class);
+          sessionStorage.setItem("studentInstrument", data.instrument || "Violin");
 
           welcomeName.textContent = data.firstName;
           loginSection.style.display  = "none";
