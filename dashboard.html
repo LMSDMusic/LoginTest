@@ -362,8 +362,13 @@
       }
 
       const level = bestScore ? bestScore.level : 1;
-      const meta  = bestScore
-        ? "Level " + level + " · Best " + Math.round(bestScore.bestPercent) + "%"
+      const threshold   = MASTERY_THRESHOLD[module.filename] ?? DEFAULT_THRESHOLD;
+      const advanced    = bestScore && bestScore.bestPercent >= threshold;
+      const metaLevel   = bestScore ? (advanced ? bestScore.level + 1 : bestScore.level) : 1;
+      const meta        = bestScore
+        ? (advanced
+            ? "Level " + metaLevel + " · Ready to advance!"
+            : "Level " + bestScore.level + " · Best " + Math.round(bestScore.bestPercent) + "%")
         : "Level 1 · Not Started";
 
       const upNextUrl = buildModuleUrl(module.filename, bestScore);
@@ -474,12 +479,23 @@
 
     // ── HELPERS ──────────────────────────────────────────────
 
+    // ── MODULE MASTERY CONFIG ──────────────────────────────
+    // Minimum percent to advance to the next level, keyed by filename.
+    // Add an entry here when you add a new module.
+    const MASTERY_THRESHOLD = {
+      "staffhero.html" : 81,
+      // "pitch.html"  : 85,
+      // "rhythm.html" : 80,
+    };
+    const DEFAULT_THRESHOLD = 81;
+
     // Builds a URL with a suggested level parameter.
-    // If the student has mastered the current level (>=90%), suggest the next one.
+    // Uses per-module mastery threshold to decide whether to advance.
     // Falls back to level 1 if no attempt data exists.
     function buildModuleUrl(filename, bestScore) {
-      if (!bestScore) return filename + "?level=1";
-      const suggestedLevel = bestScore.bestPercent >= 90
+      if (!bestScore || bestScore.level === 0) return filename + "?level=1";
+      const threshold = MASTERY_THRESHOLD[filename] ?? DEFAULT_THRESHOLD;
+      const suggestedLevel = bestScore.bestPercent >= threshold
         ? bestScore.level + 1
         : bestScore.level;
       return filename + "?level=" + suggestedLevel;
