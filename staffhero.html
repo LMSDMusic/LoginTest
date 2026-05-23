@@ -79,6 +79,10 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby48fkrwJ82uOPdqCukS
 const _sessionNumber = sessionStorage.getItem('studentNumber');
 if (!_sessionNumber) { window.location.href = 'index.html'; throw new Error('No session'); }
 
+const _urlParams    = new URLSearchParams(window.location.search);
+const _urlLevel     = parseInt(_urlParams.get('level')) || 1;
+const _sessionInstr = sessionStorage.getItem('studentInstrument') || 'Violin';
+
 // Tracks the status of the auto-submit call displayed on score cards
 let scoreSubmitStatus = 'idle'; // 'idle' | 'saving' | 'saved' | 'error'
 
