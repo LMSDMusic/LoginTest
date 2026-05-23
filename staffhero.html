@@ -114,13 +114,7 @@ async function autoSubmitScore() {
 }
 
 function exitToMenu() {
-  currentLevel = 1;
-  score = 0;
-  ucActive = false;
-  ucScoreCard = false;
-  gameOver = false;
-  levelComplete = false;
-  gameState = 'title';
+  window.location.href = 'dashboard.html';
 }
 
 function hideSubmitPanel() {} // no-op — kept for any remaining call sites
@@ -1579,9 +1573,16 @@ function generateLevel() {
 
 // ─── SCREEN STATE ─────────────────────────────────────────────────────────────
 // 'title' | 'levelPreview' | 'playing'
-let gameState = 'title';
+let gameState = 'levelPreview';
 let currentLevel = 1;
-let selectedInstrument = null;
+let selectedInstrument = _sessionInstr;
+// Clamp currentLevel to valid range for this instrument (set after level defs load)
+window.addEventListener('load', () => {
+  const levels = getLevelSet();
+  const maxLevel = Math.max(...Object.keys(levels).map(Number).filter(n => !isNaN(n)));
+  if (currentLevel > maxLevel) currentLevel = maxLevel;
+  if (currentLevel < 1) currentLevel = 1;
+});
 let hoveredBtn = null;
 let devMenuOpen = false;  // secret level-jump panel
 let devLevelBtns = [];    // hit-test rects for dev level buttons
@@ -4457,9 +4458,8 @@ canvas.addEventListener('click', (e) => {
       hoveredBtn = null; return;
     }
     if (ucScoreCardMenuBtn && hitTest(pos, ucScoreCardMenuBtn)) {
-      ucScoreCard = false;
-      ucActive = false; score = 0; gameOver = false; gameState = 'title';
-      hoveredBtn = null; return;
+      window.location.href = 'dashboard.html';
+      return;
     }
     return; // block other clicks while card is showing
   }
@@ -4538,8 +4538,7 @@ canvas.addEventListener('click', (e) => {
       hoveredBtn = null;
     }
     if (previewBackBtn && hitTest(pos, previewBackBtn)) {
-      gameState = 'title';
-      hoveredBtn = null;
+      window.location.href = 'dashboard.html';
     }
   } else if (gameState === 'playing') {
     if (gameOver) {
@@ -4555,19 +4554,16 @@ canvas.addEventListener('click', (e) => {
         return;
       }
       if (goMenuBtn && hitTest(pos, goMenuBtn)) {
-        currentLevel = 1;
-        score = 0;
-        gameState = 'levelSelect';
-        hoveredBtn = null;
+        window.location.href = 'dashboard.html';
         return;
       }
     } else if (levelComplete) {
       if (lvlCardMenuBtn && hitTest(pos, lvlCardMenuBtn)) {
-        currentLevel = 1; score = 0; levelComplete = false;
-        gameState = 'levelSelect'; hoveredBtn = null;
+        window.location.href = 'dashboard.html';
       } else if (lvlCardNextBtn && lvlCardNextBtn.enabled && hitTest(pos, lvlCardNextBtn)) {
         currentLevel++;
         levelComplete = false;
+        scoreSubmitStatus = 'idle';
         gameState = 'levelPreview'; hoveredBtn = null;
       }
     } else {
@@ -4576,11 +4572,8 @@ canvas.addEventListener('click', (e) => {
           stopBackingTrack();
           ucScoreCard = true;
         } else {
-          currentLevel = 1;
-          score = 0;
           stopBackingTrack();
-          hideSubmitPanel();
-          gameState = 'levelSelect';
+          window.location.href = 'dashboard.html';
         }
         hoveredBtn = null;
         return;
@@ -4802,8 +4795,8 @@ window.addEventListener('keydown', (e) => {
     if (gameOver) { resetGame(); return; }
     if (levelComplete) {
       const activeLevels = getLevelSet();
-      if (activeLevels[currentLevel + 1]) { currentLevel++; gameState = 'levelPreview'; }
-      else { currentLevel = 1; score = 0; gameState = 'levelSelect'; }
+      if (activeLevels[currentLevel + 1]) { currentLevel++; scoreSubmitStatus = 'idle'; gameState = 'levelPreview'; }
+      else { window.location.href = 'dashboard.html'; }
     }
     return;
   }
