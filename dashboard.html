@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f0f4ff;
+      --surface:    #ffffff;
+      --blue:       #3b6ef8;
+      --blue-dark:  #2a5ce0;
+      --blue-light: #e8effe;
+      --text:       #1a1f36;
+      --muted:      #6b7280;
+      --border:     #dde3f0;
+      --radius:     14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+      position: relative;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .greeting h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .greeting p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--blue);
+      border: 1.5px solid var(--border);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── Up Next ── */
+    .up-next {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+    }
+
+    .up-next:hover {
+      border-color: var(--blue);
+      box-shadow: 0 2px 12px rgba(59,110,248,0.10);
+    }
+
+    .up-next:active { transform: scale(0.99); }
+
+    .up-next-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .up-next-text { flex: 1; min-width: 0; }
+
+    .up-next-text h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .up-next-text p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .up-next-btn {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    /* ── Module grid ── */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .module-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .module-card:hover {
+      border-color: var(--blue);
+      box-shadow: 0 2px 12px rgba(59,110,248,0.08);
+    }
+
+    .module-card:active { transform: scale(0.97); }
+
+    .mod-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .card-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-meta {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .card-meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── Color themes for icons ── */
+    .theme-blue   { background: #e8effe; } .theme-blue   .emoji { filter: none; }
+    .theme-teal   { background: #e1f5ee; }
+    .theme-purple { background: #eeedfe; }
+    .theme-amber  { background: #faeeda; }
+    .theme-coral  { background: #faece7; }
+    .theme-green  { background: #eaf3de; }
+
+    /* ── Loading skeletons ── */
+    .skeleton {
+      background: linear-gradient(90deg, #e8eeff 25%, #d8e4ff 50%, #e8eeff 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+    }
+
+    @keyframes shimmer {
+      from { background-position: 200% 0; }
+      to   { background-position: -200% 0; }
+    }
+
+    .skeleton-upnext {
+      height: 76px;
+      border-radius: var(--radius);
+      margin-bottom: 32px;
+    }
+
+    .skeleton-card {
+      height: 110px;
+      border-radius: var(--radius);
+    }
+
+    /* ── Error state ── */
+    .error-box {
+      background: #fff5f5;
+      border: 1.5px solid #fed7d7;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      color: #c53030;
+      font-size: 0.88rem;
+    }
+
+    /* ── Sign out ── */
+    .signout-btn {
+      display: block;
+      margin: 40px auto 0;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px 16px;
+    }
+
+    .signout-btn:hover { color: var(--text); text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="greeting">
+        <h1 id="greetingName">Loading…</h1>
+        <p id="greetingMeta"></p>
+      </div>
+      <div class="avatar" id="avatarInitials" title="Sign out" onclick="signOut()"></div>
+    </div>
+
+    <!-- Up Next -->
+    <div class="section-label">Up Next</div>
+    <div id="upNextArea"></div>
+
+    <!-- Modules -->
+    <div class="section-label">All Modules</div>
+    <div id="moduleGrid" class="module-grid"></div>
+
+    <button class="signout-btn" onclick="signOut()">Sign out</button>
+  </div>
+
+  <script>
+    // ── CONFIG ───────────────────────────────────────────────
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby48fkrwJ82uOPdqCukShul87AGOxb-eMBuRUKqqHJtkuCBg4AZnFADBg4z9Spyqvk_/exec";
+    // ─────────────────────────────────────────────────────────
+
+    // Icon + color assigned by index so no sheet changes needed.
+    // Add more entries here as you add more modules.
+    const MODULE_THEMES = [
+      { emoji: "🎵", color: "theme-blue"   },
+      { emoji: "🎹", color: "theme-teal"   },
+      { emoji: "🥁", color: "theme-purple" },
+      { emoji: "🎼", color: "theme-amber"  },
+      { emoji: "🎸", color: "theme-coral"  },
+      { emoji: "🎺", color: "theme-green"  },
+    ];
+
+    // ── SESSION CHECK ────────────────────────────────────────
+    const studentNumber = sessionStorage.getItem("studentNumber");
+    const firstName     = sessionStorage.getItem("studentFirstName");
+    const lastName      = sessionStorage.getItem("studentLastName");
+    const grade         = sessionStorage.getItem("studentGrade");
+    const studentClass  = sessionStorage.getItem("studentClass");
+
+    if (!studentNumber || !firstName) {
+      window.location.href = "index.html";
+      throw new Error("No session — redirecting.");
+    }
+
+    // ── GREETING ─────────────────────────────────────────────
+    document.getElementById("greetingName").textContent = "Hello, " + firstName;
+
+    const metaParts = [];
+    if (grade)        metaParts.push("Grade " + grade);
+    if (studentClass) metaParts.push("Class " + studentClass);
+    document.getElementById("greetingMeta").textContent = metaParts.join(" · ");
+
+    const initials = ((firstName[0] || "") + (lastName ? lastName[0] : "")).toUpperCase() || "?";
+    document.getElementById("avatarInitials").textContent = initials;
+
+    // ── LOADING SKELETONS ────────────────────────────────────
+    function showSkeletons() {
+      document.getElementById("upNextArea").innerHTML =
+        '<div class="skeleton skeleton-upnext"></div>';
+
+      const grid = document.getElementById("moduleGrid");
+      grid.innerHTML = "";
+      for (let i = 0; i < 4; i++) {
+        const d = document.createElement("div");
+        d.className = "skeleton skeleton-card";
+        grid.appendChild(d);
+      }
+    }
+
+    // ── RENDER UP NEXT ───────────────────────────────────────
+    function renderUpNext(module, bestScore, theme) {
+      const area = document.getElementById("upNextArea");
+
+      if (!module) {
+        area.innerHTML = "";
+        return;
+      }
+
+      const level = bestScore ? bestScore.level : 1;
+      const meta  = bestScore
+        ? "Level " + level + " · Best " + Math.round(bestScore.bestPercent) + "%"
+        : "Level 1 · Not Started";
+
+      area.innerHTML = `
+        <a class="up-next" href="${module.filename}" style="display:flex;">
+          <div class="mod-icon up-next-icon ${theme.color}">${theme.emoji}</div>
+          <div class="up-next-text">
+            <h3>${escHtml(module.title)}</h3>
+            <p>${meta}</p>
+          </div>
+          <button class="up-next-btn">Start →</button>
+        </a>`;
+    }
+
+    // ── RENDER MODULE GRID ───────────────────────────────────
+    function renderGrid(modules, bestScoresMap) {
+      const grid = document.getElementById("moduleGrid");
+      grid.innerHTML = "";
+
+      modules.forEach((mod, index) => {
+        const theme = MODULE_THEMES[index % MODULE_THEMES.length];
+        const bs    = bestScoresMap[mod.moduleId];
+
+        let metaHtml;
+        if (bs) {
+          metaHtml = `Level <strong>${bs.level}</strong> &nbsp;·&nbsp; Best <strong>${Math.round(bs.bestPercent)}%</strong>`;
+        } else {
+          metaHtml = "Not Started";
+        }
+
+        const card = document.createElement("a");
+        card.className   = "module-card";
+        card.href        = mod.filename;
+        card.innerHTML   = `
+          <div class="mod-icon ${theme.color}">${theme.emoji}</div>
+          <div class="card-title">${escHtml(mod.title)}</div>
+          <div class="card-meta">${metaHtml}</div>`;
+
+        grid.appendChild(card);
+      });
+    }
+
+    // ── UP NEXT LOGIC ────────────────────────────────────────
+    // Suggests the module the student worked on most recently.
+    // Falls back to the first module if nothing has been attempted.
+    function pickUpNext(modules, bestScoresMap) {
+      let latest     = null;
+      let latestDate = null;
+
+      modules.forEach(mod => {
+        const bs = bestScoresMap[mod.moduleId];
+        if (bs && bs.lastAttempt) {
+          const d = new Date(bs.lastAttempt);
+          if (!latestDate || d > latestDate) {
+            latestDate = d;
+            latest     = mod;
+          }
+        }
+      });
+
+      // Nothing attempted yet — suggest first module
+      return latest || (modules.length > 0 ? modules[0] : null);
+    }
+
+    // ── MAIN: FETCH AND RENDER ───────────────────────────────
+    async function loadDashboard() {
+      showSkeletons();
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method:   "POST",
+          headers:  { "Content-Type": "text/plain" },
+          body:     JSON.stringify({ action: "getProgress", studentNumber }),
+          redirect: "follow"
+        });
+
+        if (!response.ok) throw new Error("Network error");
+
+        const data = await response.json();
+
+        if (!data.success) throw new Error(data.error || "Unknown error");
+
+        // Build a quick lookup map: moduleId → bestScore
+        const bestScoresMap = {};
+        (data.bestScores || []).forEach(bs => {
+          bestScoresMap[bs.moduleId] = bs;
+        });
+
+        const modules = data.modules || [];
+
+        // Up Next
+        const upNextModule = pickUpNext(modules, bestScoresMap);
+        const upNextIndex  = modules.indexOf(upNextModule);
+        const upNextTheme  = MODULE_THEMES[upNextIndex % MODULE_THEMES.length];
+        renderUpNext(upNextModule, bestScoresMap[upNextModule?.moduleId], upNextTheme);
+
+        // Module grid
+        renderGrid(modules, bestScoresMap);
+
+      } catch (err) {
+        document.getElementById("upNextArea").innerHTML = "";
+        document.getElementById("moduleGrid").innerHTML = `
+          <div class="error-box" style="grid-column:1/-1;">
+            Could not load modules. Please check your connection and refresh.
+          </div>`;
+      }
+    }
+
+    // ── HELPERS ──────────────────────────────────────────────
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function signOut() {
+      sessionStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    // ── INIT ─────────────────────────────────────────────────
+    loadDashboard();
+  </script>
+</body>
+</html>
