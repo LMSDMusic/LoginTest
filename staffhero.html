@@ -1578,7 +1578,7 @@ function generateLevel() {
 // ─── SCREEN STATE ─────────────────────────────────────────────────────────────
 // 'title' | 'levelPreview' | 'playing'
 let gameState = 'levelPreview';
-let currentLevel = 1;
+let currentLevel = _urlLevel;
 let selectedInstrument = _sessionInstr;
 // Clamp currentLevel to valid range for this instrument (set after level defs load)
 window.addEventListener('load', () => {
