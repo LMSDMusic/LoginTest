@@ -361,14 +361,20 @@
         return;
       }
 
-      const level = bestScore ? bestScore.level : 1;
       const threshold   = MASTERY_THRESHOLD[module.filename] ?? DEFAULT_THRESHOLD;
       const advanced    = bestScore && bestScore.bestPercent >= threshold;
-      const meta        = bestScore
-        ? (advanced
-            ? "Ready to advance! · Best " + Math.round(bestScore.bestPercent) + "%"
-            : levelLabel(module.filename, bestScore.level) + " · Best " + Math.round(bestScore.bestPercent) + "%")
-        : "Not Started";
+
+      // Compute the suggested next level from the URL we'll link to
+      const nextUrl     = buildModuleUrl(module.filename, bestScore);
+      const nextLevel   = (nextUrl.match(/level=([\d.]+)/) || [])[1] || "1";
+      const nextMode    = (nextUrl.match(/mode=(\w+)/)     || [])[1] || null;
+      const nextLabel   = nextMode
+        ? "Level " + parseFloat(nextLevel).toFixed(1)   // rhythm: show decimal
+        : "Level " + nextLevel;                          // staffhero: show integer
+
+      const meta = bestScore
+        ? nextLabel + " · Best " + Math.round(bestScore.bestPercent) + "%"
+        : nextLabel + " · Not Started";
 
       const upNextUrl = buildModuleUrl(module.filename, bestScore);
       area.innerHTML = `
@@ -490,13 +496,11 @@
 
     // Builds a URL with suggested level (and mode for rhythm) from BestScores.
     // Returns a human-readable level label.
-    // For rhythm, decodes float sub-levels: 1.1 → "Level 1 · Trainer"
+    // For rhythm, decodes float sub-levels: 1.1 → "Level 1.1"
+    // For all others (staff hero etc.), shows integer level: "Level 3"
     function levelLabel(filename, level) {
       if (filename === "rhythm.html" && level > 0) {
-        const base = Math.floor(level);
-        const sub  = Math.round((level - base) * 10);
-        const subName = sub === 1 ? "Trainer" : sub === 2 ? "Moderate" : "Fast";
-        return "Level <strong>" + base + "</strong> · " + subName;
+        return "Level <strong>" + parseFloat(level).toFixed(1) + "</strong>";
       }
       return "Level <strong>" + level + "</strong>";
     }

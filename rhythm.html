@@ -700,6 +700,13 @@ const _urlMode   = _urlParams.get('mode')             || null;
 // Tracks the current sub-level mode (trainer / moderate / fast)
 let currentMode = 'moderate';
 
+// Returns the decimal level string for display: e.g. "1.2" for Level 1 Moderate
+function decimalLevel() {
+  const base   = LEVELS[currentLevel].trainerFor || Number(currentLevel);
+  const offset = currentMode === 'trainer' ? 0.1 : currentMode === 'fast' ? 0.3 : 0.2;
+  return (base + offset).toFixed(1);
+}
+
 // Called on page load — jump straight to level/mode if URL params present
 function initApp() {
   if (_urlLevel && _urlMode) {
@@ -861,7 +868,7 @@ function chooseLevel(lvl) {
 }
 
 function refreshHeader() {
-  document.getElementById('lvl-badge').textContent  = 'Level ' + currentLevel + ' · ' + BPM + ' BPM';
+  document.getElementById('lvl-badge').textContent  = 'Level ' + decimalLevel() + ' · ' + BPM + ' BPM';
   document.getElementById('rhy-counter').textContent = (roundIndex + 1) + ' of ' + ROUNDS;
   const dc = document.getElementById('progress-dots');
   dc.innerHTML = '';
@@ -891,7 +898,7 @@ function showResults() {
   autoSubmitScore();
   const avg = levelScores.length ? Math.round(levelScores.reduce((a,b) => a+b, 0) / levelScores.length) : 0;
   const gc  = 'grade-' + (avg >= 80 ? 'a' : avg >= 60 ? 'b' : avg >= 40 ? 'c' : 'd');
-  document.getElementById('res-lvl-label').textContent = LEVELS[currentLevel].label;
+  document.getElementById('res-lvl-label').textContent = 'Level ' + decimalLevel();
   const avgEl = document.getElementById('res-avg');
   avgEl.textContent = avg + '%'; avgEl.className = 'avg-score ' + gc;
 
