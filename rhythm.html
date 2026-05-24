@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rhythm Reader</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+
+  :root {
+    --cream: #f7f3ec;
+    --parchment: #ede7d9;
+    --navy: #1a2744;
+    --navy-mid: #2c3e6b;
+    --gold: #c8973a;
+    --gold-light: #e8b84b;
+    --green: #2d7a5f;
+    --red: #b03a2e;
+    --text: #1a1a2e;
+    --muted: #6b6b8a;
+    --ink: #1a1a2e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--cream);
+    background-image: repeating-linear-gradient(transparent, transparent 39px, #c8c0b0 39px, #c8c0b0 40px);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    padding: 2rem 1.25rem;
+    overflow-y: auto;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+    color: var(--navy);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.01em;
+  }
+
+  /* ── MENU ── */
+  #menu-screen {
+    display: flex; flex-direction: column; align-items: stretch;
+    gap: .75rem; width: 100%; max-width: 480px; margin: auto; padding: 1rem 0;
+  }
+  .menu-sub {
+    font-size: .88rem; color: var(--muted); margin-bottom: .5rem;
+    text-align: center; letter-spacing: .02em;
+  }
+  .lvl-btn {
+    width: 100%; background: white;
+    border: 2px solid var(--parchment);
+    border-radius: 14px; padding: 1rem 1.25rem;
+    cursor: pointer; text-align: left;
+    display: flex; align-items: center; gap: 1rem;
+    transition: all .2s ease;
+    box-shadow: 0 2px 8px rgba(26,39,68,.06);
+    box-sizing: border-box;
+  }
+  .lvl-btn:hover {
+    border-color: var(--navy);
+    box-shadow: 0 4px 16px rgba(26,39,68,.12);
+    transform: translateY(-2px);
+  }
+  .lvl-num {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 1.4rem;
+    color: #fff; flex-shrink: 0;
+  }
+  .l1 .lvl-num { background: linear-gradient(135deg,#2d7a5f,#1a2744); }
+  .l2 .lvl-num { background: linear-gradient(135deg,#c8973a,#b03a2e); }
+  .l3 .lvl-num { background: linear-gradient(135deg,#2c3e6b,#2d7a5f); }
+  .l4 .lvl-num { background: linear-gradient(135deg,#c8973a,#2c3e6b); }
+  .l5 .lvl-num { background: linear-gradient(135deg,#b03a2e,#2c3e6b); }
+  .l6 .lvl-num { background: linear-gradient(135deg,#1a2744,#c8973a); }
+  .l7 .lvl-num { background: linear-gradient(135deg,#2d7a5f,#1a2744); }
+  .l8 .lvl-num { background: linear-gradient(135deg,#c8973a,#b03a2e); }
+  .l9 .lvl-num { background: linear-gradient(135deg,#2c3e6b,#c8973a); }
+  .l10 .lvl-num { background: linear-gradient(135deg,#b03a2e,#2d7a5f); font-size: 1.1rem; }
+  .challenge-btn {
+    border-color: var(--gold) !important;
+    background: linear-gradient(135deg, #fffdf5, #fff8e8) !important;
+  }
+  .challenge-btn:hover {
+    border-color: var(--navy) !important;
+    background: white !important;
+  }
+  .lvl-pair {
+    display: flex; flex-direction: column; gap: .75rem; width: 100%;
+  }
+  .lvl-pair .lvl-btn {
+    width: 100%; flex: none;
+  }
+  .lvl-pair .lvl-btn svg {
+    max-width: 100%;
+  }
+  .lvl-info { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .lvl-info h3 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: .95rem; color: var(--navy); margin-bottom: 0; }
+  .lvl-info p  { font-size: .8rem; color: var(--muted); margin: 0; }
+  .lvl-info svg { display: block; margin: 6px auto 0; }
+
+  /* ── GAME ── */
+  #game-screen {
+    display: none; flex-direction: column; align-items: center;
+    width: 100%; max-width: 740px;
+  }
+  .game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; margin-bottom: .75rem;
+  }
+  .lvl-badge {
+    font-size: .75rem; font-weight: 700; color: var(--gold);
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+  .rhy-counter { font-size: .75rem; font-weight: 500; color: var(--muted); }
+  .progress-dots { display: flex; gap: 6px; align-items: center; }
+  .pdot {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--parchment); border: 1.5px solid #c8bfb0; transition: all .3s;
+  }
+  .pdot.current  { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,151,58,.2); }
+  .pdot.scored-a { background: var(--green); border-color: var(--green); }
+  .pdot.scored-b { background: #2d7a8a; border-color: #2d7a8a; }
+  .pdot.scored-c { background: var(--gold); border-color: var(--gold); }
+  .pdot.scored-d { background: var(--red); border-color: var(--red); }
+
+  #score-display {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; font-size: 1.2rem; color: var(--navy);
+    margin-bottom: 1rem; min-height: 1.6rem; text-align: center;
+  }
+  .staff-wrap {
+    background: white;
+    border: 2px solid var(--parchment);
+    border-radius: 14px; padding: 1rem 1.5rem;
+    width: 100%;
+    box-shadow: 0 4px 16px rgba(26,39,68,.08);
+    margin-bottom: 1.25rem;
+  }
+  #notation-svg { width: 100%; height: 130px; display: block; }
+
+  #countdown-display {
+    height: 4.4rem; display: flex; align-items: center; justify-content: center;
+    margin-bottom: .75rem;
+  }
+  #countdown-word {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.2rem; font-weight: 700;
+    color: var(--gold);
+    opacity: 0; transform: scale(0.7);
+    transition: opacity .08s, transform .08s;
+    letter-spacing: 0.04em;
+  }
+  #countdown-word.flash { opacity: 1; transform: scale(1); }
+  #countdown-word.go-word { color: var(--green); }
+
+  #status {
+    font-size: .82rem; font-weight: 600; color: var(--muted);
+    letter-spacing: .08em; text-transform: uppercase; text-align: center;
+    min-height: 1.4rem; margin-bottom: .75rem;
+  }
+  #status.active { color: var(--navy); }
+  #status.go     { color: var(--green); font-weight: 700; }
+  #status.done   { color: var(--navy); font-weight: 700; }
+  #status.listen { color: var(--gold); font-weight: 700; }
+
+  .tap-flash {
+    position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background: rgba(255,255,255,.06); opacity: 0; transition: opacity .15s;
+  }
+  .tap-flash.lit { opacity: 1; }
+
+  #btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  #btn {
+    background: var(--navy);
+    border: none; color: white;
+    font-family: 'DM Sans', sans-serif; font-weight: 700;
+    font-size: 1rem; letter-spacing: .04em;
+    padding: .85rem 2.8rem;
+    border-radius: 10px; cursor: pointer;
+    transition: background .2s, transform .15s, box-shadow .15s;
+    box-shadow: 0 4px 16px rgba(26,39,68,.25);
+    margin-top: .25rem;
+  }
+  #btn:hover  { background: var(--navy-mid); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,39,68,.3); }
+  #btn:active { transform: translateY(0); }
+
+  .game-nav-btns {
+    display: flex; gap: .5rem; justify-content: center; margin-top: .5rem;
+  }
+  .game-nav-btn {
+    background: none; border: 1.5px solid var(--gold); color: var(--gold);
+    font-family: 'DM Sans', sans-serif; font-size: .75rem; font-weight: 600;
+    padding: .35rem 1rem; border-radius: 20px; cursor: pointer;
+    letter-spacing: .04em; transition: background .15s, color .15s;
+  }
+  .game-nav-btn:hover { background: var(--gold); color: white; }
+  .game-nav-btn:disabled { opacity: 0.25; cursor: default; pointer-events: none; }
+  #result-detail {
+    font-size: .8rem; font-weight: 500; color: var(--muted);
+    text-align: center; min-height: 1.2rem; margin-top: .6rem;
+  }
+
+  /* ── RESULTS ── */
+  #results-screen {
+    display: none; flex-direction: column; align-items: center;
+    gap: 1.2rem; width: 100%; max-width: 460px;
+  }
+  .res-card {
+    background: white; border-radius: 16px; padding: 2rem 2rem 1.5rem; width: 100%;
+    box-shadow: 0 4px 16px rgba(26,39,68,.1); text-align: center;
+    border: 2px solid var(--parchment);
+  }
+  .res-card h2 {
+    font-family: 'Playfair Display', serif; font-size: 1.6rem;
+    color: var(--navy); margin-bottom: .2rem;
+  }
+  .res-lvl-label {
+    font-size: .75rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1.5rem;
+  }
+  .avg-score {
+    font-family: 'Playfair Display', serif; font-size: 4rem;
+    line-height: 1; margin-bottom: .2rem;
+  }
+  .avg-label {
+    font-size: .75rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1.6rem;
+  }
+  .grade-a { color: var(--green); }
+  .grade-b { color: #2d7a8a; }
+  .grade-c { color: var(--gold); }
+  .grade-d { color: var(--red); }
+  .bars { display: flex; justify-content: center; gap: .6rem; align-items: flex-end; margin-bottom: .5rem; }
+  .bar-wrap  { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-track { width: 32px; height: 64px; background: var(--parchment); border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; }
+  .bar-fill  { width: 100%; border-radius: 6px; transition: height .7s cubic-bezier(.34,1.56,.64,1); }
+  .bar-pct   { font-size: .7rem; font-weight: 700; color: var(--muted); }
+  .bar-n     { font-size: .7rem; color: var(--muted); }
+
+  /* ── Level options modal ── */
+  #level-modal {
+    position: fixed; inset: 0; z-index: 200;
+    align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .modal-backdrop {
+    position: absolute; inset: 0; background: rgba(26,39,68,.45);
+  }
+  .modal-card {
+    position: relative; background: white; border-radius: 18px;
+    padding: 1.75rem 1.5rem; width: 100%; max-width: 360px;
+    box-shadow: 0 20px 60px rgba(26,39,68,.25);
+    animation: slideUp .25s ease;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif; font-size: 1.3rem;
+    color: var(--navy); text-align: center; margin-bottom: .2rem;
+  }
+  .modal-sub {
+    font-size: .82rem; color: var(--muted); text-align: center;
+    margin-bottom: 1.25rem; letter-spacing: .04em;
+  }
+  .modal-options { display: flex; flex-direction: column; gap: .6rem; }
+  .modal-opt {
+    display: flex; align-items: center; gap: .85rem;
+    background: var(--cream); border: 2px solid var(--parchment);
+    border-radius: 12px; padding: .85rem 1rem;
+    cursor: pointer; transition: all .18s ease; text-align: left; width: 100%;
+  }
+  .modal-opt:hover { background: white; border-color: var(--navy); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,39,68,.1); }
+  .modal-opt-icon  { font-size: 1.4rem; flex-shrink: 0; }
+  .modal-opt-label { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--navy); font-weight: 700; flex: 1; }
+  .modal-opt-bpm   { font-size: .78rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+  .modal-cancel {
+    display: block; width: 100%; margin-top: .85rem; padding: .7rem;
+    background: none; border: 1.5px solid var(--parchment); border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: .9rem; color: var(--muted);
+    cursor: pointer; transition: all .15s;
+  }
+  .modal-cancel:hover { border-color: var(--navy); color: var(--navy); }
+
+</style>
+</head>
+<body>
+<div class="tap-flash" id="tapFlash"></div>
+<h1>Rhythm Reader</h1>
+
+<!-- ONBOARDING -->
+
+<!-- MENU -->
+<div id="menu-screen">
+  <p class="menu-sub">Choose a level to begin</p>
+  <div style="text-align:center;margin-bottom:.75rem;">
+    <a href="dashboard.html" style="font-size:.82rem;color:var(--gold);font-weight:600;text-decoration:none;">← Back to Dashboard</a>
+  </div>
+
+  <button class="lvl-btn l1" onclick="openModal(1)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#2d7a5f,#1a2744)">1</div>
+    <div class="lvl-info">
+      <h3>Quarter &amp; Eighth</h3>
+      <svg viewBox="0 0 190 54" width="190" height="44" style="display:block;margin:6px auto 0">
+                        <line x1="8" y1="10" x2="182" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                        <line x1="8" y1="18" x2="182" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                        <line x1="8" y1="26" x2="182" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                        <line x1="8" y1="34" x2="182" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                        <line x1="8" y1="42" x2="182" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                        <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                        <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                        <ellipse cx="62" cy="26" rx="6" ry="4.2" transform="rotate(-15,62,26)" fill="#1a1a2e"/>
+                        <line x1="56.5" y1="27.5" x2="56.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                        <ellipse cx="110" cy="26" rx="6" ry="4.2" transform="rotate(-15,110,26)" fill="#1a1a2e"/>
+                        <line x1="104.5" y1="27.5" x2="104.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                        <ellipse cx="146" cy="26" rx="6" ry="4.2" transform="rotate(-15,146,26)" fill="#1a1a2e"/>
+                        <line x1="140.5" y1="27.5" x2="140.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                        <rect x="103.75" y="47" width="37.5" height="4.5" fill="#1a1a2e" rx="1"/>
+                      </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l2" onclick="openModal(2)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#c8973a,#b03a2e)">2</div>
+    <div class="lvl-info">
+      <h3>Quarter, Eighth, Quarter Rest</h3>
+      <svg viewBox="0 0 200 54" width="200" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="192" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="192" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="192" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="192" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="192" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- quarter -->
+                      <ellipse cx="50" cy="26" rx="6" ry="4.2" transform="rotate(-15,50,26)" fill="#1a1a2e"/>
+                      <line x1="44.5" y1="27.5" x2="44.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- beamed eighths -->
+                      <ellipse cx="92" cy="26" rx="6" ry="4.2" transform="rotate(-15,92,26)" fill="#1a1a2e"/>
+                      <line x1="86.5" y1="27.5" x2="86.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <ellipse cx="126" cy="26" rx="6" ry="4.2" transform="rotate(-15,126,26)" fill="#1a1a2e"/>
+                      <line x1="120.5" y1="27.5" x2="120.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <rect x="85.75" y="47" width="35.5" height="4.5" fill="#1a1a2e" rx="1"/>
+                      <!-- quarter rest -->
+                      <rect class="menu-rest-placeholder" data-x="166" width="0" height="0"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l3" onclick="openModal(3)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#2c3e6b,#2d7a5f)">3</div>
+    <div class="lvl-info">
+      <h3>Half &amp; Quarter Rest</h3>
+      <svg viewBox="0 0 210 54" width="210" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="202" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="202" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="202" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="202" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="202" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- half -->
+                      <ellipse cx="46" cy="26" rx="6" ry="4.2" transform="rotate(-15,46,26)" fill="none" stroke="#1a1a2e" stroke-width="1.5"/>
+                      <line x1="39.5" y1="27.5" x2="39.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- quarter -->
+                      <ellipse cx="82" cy="26" rx="6" ry="4.2" transform="rotate(-15,82,26)" fill="#1a1a2e"/>
+                      <line x1="76.5" y1="27.5" x2="76.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- beamed eighths -->
+                      <ellipse cx="116" cy="26" rx="6" ry="4.2" transform="rotate(-15,116,26)" fill="#1a1a2e"/>
+                      <line x1="110.5" y1="27.5" x2="110.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <ellipse cx="146" cy="26" rx="6" ry="4.2" transform="rotate(-15,146,26)" fill="#1a1a2e"/>
+                      <line x1="140.5" y1="27.5" x2="140.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <rect x="109.75" y="47" width="31.5" height="4.5" fill="#1a1a2e" rx="1"/>
+                      <!-- quarter rest -->
+                      <rect class="menu-rest-placeholder" data-x="178" width="0" height="0"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l4" onclick="openModal(4)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#c8973a,#2c3e6b)">4</div>
+    <div class="lvl-info">
+      <h3>3/4 Time</h3>
+      <svg viewBox="0 0 170 54" width="170" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="162" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="162" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="162" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="162" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="162" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">3</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- 3 quarter notes -->
+                      <ellipse cx="52" cy="26" rx="6" ry="4.2" transform="rotate(-15,52,26)" fill="#1a1a2e"/>
+                      <line x1="46.5" y1="27.5" x2="46.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <ellipse cx="96" cy="26" rx="6" ry="4.2" transform="rotate(-15,96,26)" fill="#1a1a2e"/>
+                      <line x1="90.5" y1="27.5" x2="90.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <ellipse cx="140" cy="26" rx="6" ry="4.2" transform="rotate(-15,140,26)" fill="#1a1a2e"/>
+                      <line x1="134.5" y1="27.5" x2="134.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l5" onclick="openModal(5)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#b03a2e,#2c3e6b)">5</div>
+    <div class="lvl-info">
+      <h3>Four-Sixteenths</h3>
+      <svg viewBox="0 0 240 54" width="240" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="232" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="232" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="232" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="232" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="232" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- half -->
+                      <ellipse cx="42" cy="26" rx="6" ry="4.2" transform="rotate(-15,42,26)" fill="none" stroke="#1a1a2e" stroke-width="1.5"/>
+                      <line x1="35.5" y1="27.5" x2="35.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- quarter -->
+                      <ellipse cx="70" cy="26" rx="6" ry="4.2" transform="rotate(-15,70,26)" fill="#1a1a2e"/>
+                      <line x1="64.5" y1="27.5" x2="64.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- beamed eighths -->
+                      <ellipse cx="96" cy="26" rx="6" ry="4.2" transform="rotate(-15,96,26)" fill="#1a1a2e"/>
+                      <line x1="90.5" y1="27.5" x2="90.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <ellipse cx="122" cy="26" rx="6" ry="4.2" transform="rotate(-15,122,26)" fill="#1a1a2e"/>
+                      <line x1="116.5" y1="27.5" x2="116.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <rect x="89.75" y="47" width="27.5" height="4.5" fill="#1a1a2e" rx="1"/>
+                      <!-- four sixteenths double-beamed -->
+                      <ellipse cx="142" cy="26" rx="5.5" ry="4" transform="rotate(-15,142,26)" fill="#1a1a2e"/>
+                      <line x1="136.5" y1="27.5" x2="136.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="158" cy="26" rx="5.5" ry="4" transform="rotate(-15,158,26)" fill="#1a1a2e"/>
+                      <line x1="152.5" y1="27.5" x2="152.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="174" cy="26" rx="5.5" ry="4" transform="rotate(-15,174,26)" fill="#1a1a2e"/>
+                      <line x1="168.5" y1="27.5" x2="168.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="190" cy="26" rx="5.5" ry="4" transform="rotate(-15,190,26)" fill="#1a1a2e"/>
+                      <line x1="184.5" y1="27.5" x2="184.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <rect x="135.75" y="47" width="49.5" height="4" fill="#1a1a2e" rx="1"/>
+                      <rect x="135.75" y="40" width="49.5" height="4" fill="#1a1a2e" rx="1"/>
+                      <!-- quarter rest -->
+                      <rect class="menu-rest-placeholder" data-x="216" width="0" height="0"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l6" onclick="openModal(6)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#1a2744,#c8973a)">6</div>
+    <div class="lvl-info">
+      <h3>Sixteenth Notes in 3/4</h3>
+      <svg viewBox="0 0 200 54" width="200" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="192" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="192" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="192" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="192" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="192" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">3</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- quarter -->
+                      <ellipse cx="50" cy="26" rx="6" ry="4.2" transform="rotate(-15,50,26)" fill="#1a1a2e"/>
+                      <line x1="44.5" y1="27.5" x2="44.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- four sixteenths double-beamed -->
+                      <ellipse cx="78"  cy="26" rx="5.5" ry="4" transform="rotate(-15,78,26)"  fill="#1a1a2e"/>
+                      <line x1="72.5"  y1="27.5" x2="72.5"  y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="94"  cy="26" rx="5.5" ry="4" transform="rotate(-15,94,26)"  fill="#1a1a2e"/>
+                      <line x1="88.5"  y1="27.5" x2="88.5"  y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="110" cy="26" rx="5.5" ry="4" transform="rotate(-15,110,26)" fill="#1a1a2e"/>
+                      <line x1="104.5" y1="27.5" x2="104.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="126" cy="26" rx="5.5" ry="4" transform="rotate(-15,126,26)" fill="#1a1a2e"/>
+                      <line x1="120.5" y1="27.5" x2="120.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <rect x="71.75" y="47" width="49.5" height="4" fill="#1a1a2e" rx="1"/>
+                      <rect x="71.75" y="40" width="49.5" height="4" fill="#1a1a2e" rx="1"/>
+                      <!-- half -->
+                      <ellipse cx="168" cy="26" rx="6" ry="4.2" transform="rotate(-15,168,26)" fill="none" stroke="#1a1a2e" stroke-width="1.5"/>
+                      <line x1="161.5" y1="27.5" x2="161.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l7" onclick="openModal(7)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#2d7a5f,#1a2744)">7</div>
+    <div class="lvl-info">
+      <h3>Mixed Sixteenth Groups</h3>
+      <svg viewBox="0 0 200 54" width="200" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="192" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="192" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="192" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="192" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="192" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- 16th 16th 8th -->
+                      <ellipse cx="42"  cy="26" rx="5.5" ry="4" transform="rotate(-15,42,26)"  fill="#1a1a2e"/>
+                      <line x1="36.5"  y1="27.5" x2="36.5"  y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="58"  cy="26" rx="5.5" ry="4" transform="rotate(-15,58,26)"  fill="#1a1a2e"/>
+                      <line x1="52.5"  y1="27.5" x2="52.5"  y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="80"  cy="26" rx="5.5" ry="4" transform="rotate(-15,80,26)"  fill="#1a1a2e"/>
+                      <line x1="74.5"  y1="27.5" x2="74.5"  y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <rect x="35.75" y="47" width="39.5" height="4" fill="#1a1a2e" rx="1"/>
+                      <rect x="35.75" y="40" width="17.5" height="4" fill="#1a1a2e" rx="1"/>
+                      <!-- 8th 16th 16th -->
+                      <ellipse cx="118" cy="26" rx="5.5" ry="4" transform="rotate(-15,118,26)" fill="#1a1a2e"/>
+                      <line x1="112.5" y1="27.5" x2="112.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="140" cy="26" rx="5.5" ry="4" transform="rotate(-15,140,26)" fill="#1a1a2e"/>
+                      <line x1="134.5" y1="27.5" x2="134.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="158" cy="26" rx="5.5" ry="4" transform="rotate(-15,158,26)" fill="#1a1a2e"/>
+                      <line x1="152.5" y1="27.5" x2="152.5" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <rect x="111.75" y="47" width="41.5" height="4" fill="#1a1a2e" rx="1"/>
+                      <rect x="133.75" y="40" width="19.5" height="4" fill="#1a1a2e" rx="1"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l8" onclick="openModal(8)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#c8973a,#b03a2e)">8</div>
+    <div class="lvl-info">
+      <h3>Dotted Quarter &amp; Eighth</h3>
+      <svg viewBox="0 0 200 54" width="200" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="192" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="192" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="192" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="192" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="192" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- quarter -->
+                      <ellipse cx="50" cy="26" rx="6" ry="4.2" transform="rotate(-15,50,26)" fill="#1a1a2e"/>
+                      <line x1="44.5" y1="27.5" x2="44.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- beamed eighths -->
+                      <ellipse cx="88" cy="26" rx="6" ry="4.2" transform="rotate(-15,88,26)" fill="#1a1a2e"/>
+                      <line x1="82.5" y1="27.5" x2="82.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <ellipse cx="120" cy="26" rx="6" ry="4.2" transform="rotate(-15,120,26)" fill="#1a1a2e"/>
+                      <line x1="114.5" y1="27.5" x2="114.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <rect x="81.75" y="47" width="33.5" height="4.5" fill="#1a1a2e" rx="1"/>
+                      <!-- dotted quarter -->
+                      <ellipse cx="146" cy="26" rx="6" ry="4.2" transform="rotate(-15,146,26)" fill="#1a1a2e"/>
+                      <line x1="140.5" y1="27.5" x2="140.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <circle cx="156" cy="24" r="2.2" fill="#1a1a2e"/>
+                      <!-- single eighth (image) -->
+                      <rect class="menu-eighth-placeholder" data-cx="174" x="0" y="0" width="0" height="0"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l9" onclick="openModal(9)">
+    <div class="lvl-num" style="background:linear-gradient(135deg,#2c3e6b,#c8973a)">9</div>
+    <div class="lvl-info">
+      <h3>Dotted Quarter &amp; Sixteenths</h3>
+      <svg viewBox="0 0 230 54" width="230" height="44" style="display:block;margin:6px auto 0">
+                      <line x1="8" y1="10" x2="222" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="18" x2="222" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="26" x2="222" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="34" x2="222" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+                      <line x1="8" y1="42" x2="222" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+                      <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+                      <!-- dotted quarter -->
+                      <ellipse cx="42" cy="26" rx="6" ry="4.2" transform="rotate(-15,42,26)" fill="#1a1a2e"/>
+                      <line x1="36.5" y1="27.5" x2="36.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <circle cx="51" cy="24" r="1.8" fill="#1a1a2e"/>
+                      <!-- single eighth (image) -->
+                      <rect class="menu-eighth-placeholder" data-cx="66" x="0" y="0" width="0" height="0"/>
+                      <!-- half -->
+                      <ellipse cx="92" cy="26" rx="6" ry="4.2" transform="rotate(-15,92,26)" fill="none" stroke="#1a1a2e" stroke-width="1.5"/>
+                      <line x1="85.5" y1="27.5" x2="85.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+                      <!-- four sixteenths double-beamed -->
+                      <ellipse cx="116" cy="26" rx="5" ry="3.6" transform="rotate(-15,116,26)" fill="#1a1a2e"/>
+                      <line x1="111" y1="27.5" x2="111" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="130" cy="26" rx="5" ry="3.6" transform="rotate(-15,130,26)" fill="#1a1a2e"/>
+                      <line x1="125" y1="27.5" x2="125" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="144" cy="26" rx="5" ry="3.6" transform="rotate(-15,144,26)" fill="#1a1a2e"/>
+                      <line x1="139" y1="27.5" x2="139" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="158" cy="26" rx="5" ry="3.6" transform="rotate(-15,158,26)" fill="#1a1a2e"/>
+                      <line x1="153" y1="27.5" x2="153" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <rect x="110.25" y="47" width="43.5" height="3.5" fill="#1a1a2e" rx="1"/>
+                      <rect x="110.25" y="40" width="43.5" height="3.5" fill="#1a1a2e" rx="1"/>
+                      <!-- mixed 8th+16th+16th -->
+                      <ellipse cx="178" cy="26" rx="5" ry="3.6" transform="rotate(-15,178,26)" fill="#1a1a2e"/>
+                      <line x1="173" y1="27.5" x2="173" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="192" cy="26" rx="5" ry="3.6" transform="rotate(-15,192,26)" fill="#1a1a2e"/>
+                      <line x1="187" y1="27.5" x2="187" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <ellipse cx="206" cy="26" rx="5" ry="3.6" transform="rotate(-15,206,26)" fill="#1a1a2e"/>
+                      <line x1="201" y1="27.5" x2="201" y2="50" stroke="#1a1a2e" stroke-width="1.3"/>
+                      <rect x="172.25" y="47" width="29.5" height="3.5" fill="#1a1a2e" rx="1"/>
+                      <rect x="186.25" y="40" width="15.5" height="3.5" fill="#1a1a2e" rx="1"/>
+                    </svg>
+    </div>
+  </button>
+
+  <button class="lvl-btn l10" onclick="openModal(10)">
+    <div class="lvl-num">10</div>
+    <div class="lvl-info">
+      <h3>Syncopation</h3>
+      <svg viewBox="0 0 210 54" width="210" height="44" style="display:block;margin:6px auto 0">
+        <line x1="8" y1="10" x2="202" y2="10" stroke="#1a1a2e" stroke-width=".8"/>
+        <line x1="8" y1="18" x2="202" y2="18" stroke="#1a1a2e" stroke-width=".8"/>
+        <line x1="8" y1="26" x2="202" y2="26" stroke="#1a1a2e" stroke-width=".8"/>
+        <line x1="8" y1="34" x2="202" y2="34" stroke="#1a1a2e" stroke-width=".8"/>
+        <line x1="8" y1="42" x2="202" y2="42" stroke="#1a1a2e" stroke-width=".8"/>
+        <text x="20" y="24" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+        <text x="20" y="42" font-family="Georgia,serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a2e">4</text>
+        <!-- eqe: single eighth + quarter + single eighth -->
+        <rect class="menu-eighth-placeholder" data-cx="44" x="0" y="0" width="0" height="0"/>
+        <ellipse cx="70" cy="26" rx="6" ry="4.2" transform="rotate(-15,70,26)" fill="#1a1a2e"/>
+        <line x1="64.5" y1="27.5" x2="64.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+        <rect class="menu-eighth-placeholder" data-cx="96" x="0" y="0" width="0" height="0"/>
+        <!-- edq: single eighth + dotted quarter -->
+        <rect class="menu-eighth-placeholder" data-cx="130" x="0" y="0" width="0" height="0"/>
+        <ellipse cx="164" cy="26" rx="6" ry="4.2" transform="rotate(-15,164,26)" fill="#1a1a2e"/>
+        <line x1="158.5" y1="27.5" x2="158.5" y2="50" stroke="#1a1a2e" stroke-width="1.4"/>
+        <circle cx="174" cy="24" r="2" fill="#1a1a2e"/>
+      </svg>
+    </div>
+  </button>
+
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div class="game-header">
+    <span class="lvl-badge" id="lvl-badge">Level 1</span>
+    <div class="progress-dots" id="progress-dots"></div>
+    <span class="rhy-counter" id="rhy-counter">1 of 5</span>
+  </div>
+  <div id="score-display"></div>
+  <div class="staff-wrap">
+    <svg id="notation-svg" viewBox="0 0 680 110" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+  <div id="countdown-display"><span id="countdown-word"></span></div>
+  <div id="status"></div>
+  <button id="btn">Start</button>
+  <div class="game-nav-btns">
+    <button class="game-nav-btn" onclick="chooseLevel(currentLevel)">Restart</button>
+    <button class="game-nav-btn" onclick="window.location.href='dashboard.html'">Dashboard</button>
+  </div>
+  <div id="result-detail"></div>
+</div>
+
+<!-- RESULTS -->
+<div id="results-screen">
+  <div class="res-card">
+    <h2>Level Complete!</h2>
+    <div class="res-lvl-label" id="res-lvl-label"></div>
+    <div class="avg-score" id="res-avg"></div>
+    <div class="avg-label">Average Score</div>
+    <div class="bars" id="res-bars"></div>
+    <div class="submit-status" id="submit-status" style="margin-top:.75rem"></div>
+  </div>
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem;">
+    <button style="padding:.75rem 1.8rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;border:none;background:var(--navy);color:white;box-shadow:0 4px 16px rgba(26,39,68,.25);" onclick="retryLevel()">Try Again</button>
+    <button style="padding:.75rem 1.8rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;border:2px solid var(--parchment);background:var(--parchment);color:var(--navy);" onclick="window.location.href='dashboard.html'">Dashboard</button>
+  </div>
+</div>
+
+
+<!-- LEVEL OPTIONS MODAL -->
+<div id="level-modal" style="display:none">
+  <div class="modal-backdrop" onclick="closeModal()"></div>
+  <div class="modal-card">
+    <div class="modal-title" id="modal-title">Level 1</div>
+    <div class="modal-sub">Choose your speed</div>
+    <div class="modal-options">
+      <button class="modal-opt" onclick="startLevelMode('trainer')">
+        <span class="modal-opt-icon">👂</span>
+        <span class="modal-opt-label">Trainer</span>
+        <span class="modal-opt-bpm">90 BPM</span>
+      </button>
+      <button class="modal-opt" onclick="startLevelMode('moderate')">
+        <span class="modal-opt-icon">🎵</span>
+        <span class="modal-opt-label">Moderate</span>
+        <span class="modal-opt-bpm">90 BPM</span>
+      </button>
+      <button class="modal-opt" onclick="startLevelMode('fast')">
+        <span class="modal-opt-icon">⚡</span>
+        <span class="modal-opt-label">Fast</span>
+        <span class="modal-opt-bpm">120 BPM</span>
+      </button>
+    </div>
+    <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+
+// ── Session & Submission ─────────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_REo7dnRZo3fny_xv3uyhCUlImo4-4RM3x8W9Nu0JQHvBNv3HYRlzquLzm-PVCxzg/exec';
+
+// Redirect to login if no session
+const _sessionNumber = sessionStorage.getItem('studentNumber');
+if (!_sessionNumber) { window.location.href = 'index.html'; throw new Error('No session'); }
+
+// Tracks the current sub-level mode (trainer / moderate / fast)
+let currentMode = 'moderate';
+
+// Called on page load
+function initApp() {
+  showScreen('menu-screen');
+  if (window.location.hash && window.location.hash !== '#' && window.location.hash !== '#rhythm/') {
+    navigateRhythmHash(window.location.hash);
+  }
+}
+
+// Auto-submits score to Apps Script using session data.
+// Level encoding: level * 1 + modeOffset
+//   Trainer  → level + 0.1  (e.g. Level 3 Trainer  = 3.1)
+//   Moderate → level + 0.2  (e.g. Level 3 Moderate = 3.2)
+//   Fast     → level + 0.3  (e.g. Level 3 Fast     = 3.3)
+// This lets MAXIFS in BestScores correctly rank levels numerically.
+async function autoSubmitScore() {
+  const studentNumber = sessionStorage.getItem('studentNumber');
+  if (!studentNumber) return;
+
+  const statusEl = document.getElementById('submit-status');
+  if (statusEl) { statusEl.textContent = 'Saving…'; }
+
+  const avg = levelScores.length
+    ? Math.round(levelScores.reduce((a,b) => a+b, 0) / levelScores.length)
+    : 0;
+
+  const baseLevel = LEVELS[currentLevel].trainerFor || currentLevel;
+  const modeOffset = currentMode === 'trainer' ? 0.1 : currentMode === 'fast' ? 0.3 : 0.2;
+  const levelVal = baseLevel + modeOffset;
+
+  const totalSec = levelElapsed
+    ? (()=>{ const parts = levelElapsed.match(/(?:(\d+)m\s*)?(\d+)s/); return parts ? parseInt(parts[1]||0)*60 + parseInt(parts[2]) : 0; })()
+    : 0;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method:   'POST',
+      headers:  { 'Content-Type': 'text/plain' },
+      body:     JSON.stringify({
+        action:          'logAttempt',
+        studentNumber,
+        moduleId:        'rhythm_tap',
+        level:           levelVal,
+        score:           Math.round(avg * levelScores.length),
+        percent:         avg,
+        durationSeconds: totalSec,
+        missedItems:     ''
+      }),
+      redirect: 'follow'
+    });
+    const data = await res.json();
+    if (statusEl) {
+      statusEl.textContent = data.success ? '✓ Score saved' : '✗ Save failed';
+    }
+  } catch(e) {
+    if (statusEl) statusEl.textContent = '✗ Save failed';
+  }
+}
+
+const actx = new (window.AudioContext || window.webkitAudioContext)();
+function playClick(accent, time) {
+  time = time || actx.currentTime;
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.connect(g); g.connect(actx.destination);
+  osc.frequency.value = accent ? 1200 : 800; osc.type = 'square';
+  g.gain.setValueAtTime(accent ? 0.3 : 0.15, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+  osc.start(time); osc.stop(time + 0.05);
+}
+function playTap() {
+  const t = actx.currentTime;
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.connect(g); g.connect(actx.destination);
+  osc.frequency.value = 600; osc.type = 'sine';
+  g.gain.setValueAtTime(0.2, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+  osc.start(t); osc.stop(t + 0.08);
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
+let BPM = 90, BEAT_MS = 60000 / BPM;
+const PERFECT_ATK = 100;  // ms — full attack score
+const PERFECT_REL = 100;  // ms — full release score
+const MISS_WIN    = 101;  // ms — zero score (anything over 100ms is a miss)
+const ROUNDS = 5;
+function totalBeats() { return (LEVELS[currentLevel].beats || 4) * 2; }
+
+// ── Level definitions ─────────────────────────────────────────────────────────
+const LEVELS = {
+  '1t':{ types: ['quarter','eighth'],                                                       beats: 4, label: 'Level 1 Trainer',               trainerFor: 1 },
+  1:   { types: ['quarter','eighth'],                                                       beats: 4, label: 'Level 1 — Quarter & Eighth Notes'  },
+  '2t':{ types: ['quarter','eighth','qrest'],                                               beats: 4, label: 'Level 2 Trainer',               trainerFor: 2 },
+  2:   { types: ['quarter','eighth','qrest'],                                               beats: 4, label: 'Level 2 — Adds Quarter Rests'      },
+  '3t':{ types: ['quarter','eighth','qrest','half'],                                        beats: 4, label: 'Level 3 Trainer',               trainerFor: 3 },
+  3:   { types: ['quarter','eighth','qrest','half'],                                        beats: 4, label: 'Level 3 — Half &amp; Quarter Rest'         },
+  '4t':{ types: ['quarter','eighth','qrest','half','dotted-half'],                                          beats: 3, label: 'Level 4 Trainer',               trainerFor: 4 },
+  4:   { types: ['quarter','eighth','qrest','half','dotted-half'],                                          beats: 3, label: 'Level 4 — 3/4 Time'                },
+  '5t':{ types: ['quarter','eighth','qrest','half','dotted-half','sixteenth'],                              beats: 4, label: 'Level 5 Trainer',               trainerFor: 5 },
+  5:   { types: ['quarter','eighth','qrest','half','dotted-half','sixteenth'],                              beats: 4, label: 'Level 5 — Four-Sixteenths'    },
+  '6t':{ types: ['quarter','eighth','qrest','half','dotted-half','sixteenth'],                              beats: 3, label: 'Level 6 Trainer',               trainerFor: 6 },
+  6:   { types: ['quarter','eighth','qrest','half','dotted-half','sixteenth'],                              beats: 3, label: 'Level 6 — Sixteenth Notes in 3/4'  },
+  '7t':{ types: ['quarter','eighth','qrest','half','dotted-half','sixteenth','mixed16'],                    beats: 4, label: 'Level 7 Trainer',               trainerFor: 7 },
+  7:   { types: ['quarter','eighth','qrest','half','dotted-half','sixteenth','mixed16'],                    beats: 4, label: 'Level 7 — Mixed Sixteenth Groups'  },
+  '8t':{ types: ['quarter','eighth','qrest','half','dotted-half','dotted-combo'],                           beats: 4, label: 'Level 8 Trainer',               trainerFor: 8 },
+  8:   { types: ['quarter','eighth','qrest','half','dotted-half','dotted-combo'],                           beats: 4, label: 'Level 8 — Dotted Quarter & Eighth' },
+  '9t':{ types: ['quarter','eighth','qrest','half','dotted-half','sixteenth','mixed16','dotted-combo'],     beats: 4, label: 'Level 9 Trainer',               trainerFor: 9 },
+  9:   { types: ['quarter','eighth','qrest','half','dotted-half','sixteenth','mixed16','dotted-combo'],     beats: 4, label: 'Level 9 — Dotted Quarter &amp; Sixteenths'             },
+  '10t':{ types: ['quarter','eighth','qrest','half','dotted-half','sixteenth','mixed16','dotted-combo','synco2'], beats: 4, label: 'Level 10 Trainer',             trainerFor: 10 },
+  10:   { types: ['quarter','eighth','qrest','half','dotted-half','sixteenth','mixed16','dotted-combo','synco2'], beats: 4, label: 'Level 10 — Syncopation'           },
+};
+
+// ── Level state ───────────────────────────────────────────────────────────────
+let currentLevel = 1;
+let roundIndex   = 0;      // 0-4 within a level
+let levelScores  = [];     // score per round
+let rhythmReady  = false;  // true when chooseLevel has pre-loaded the first rhythm
+let levelStartTime = 0;    // ms timestamp when first round starts
+let levelElapsed   = '';   // formatted elapsed time for submission
+
+
+
+// ── Round state ───────────────────────────────────────────────────────────────
+let rhythm = [], gamePhase = 'idle', startTime = 0;
+let expectedTaps = [], tapResults = [], playerTaps = [];
+let keyIsDown = false, pressNoteIdx = -1;
+
+// ── Screen helpers ────────────────────────────────────────────────────────────
+function showScreen(id) {
+  ['menu-screen','game-screen','results-screen'].forEach(s =>
+    document.getElementById(s).style.display = 'none');
+  const lm = document.getElementById('level-modal');
+  if (lm) lm.style.display = 'none';
+  document.getElementById(id).style.display = 'flex';
+}
+function goMenu()      { gamePhase = 'idle'; setRhythmHash(''); showScreen('menu-screen'); }
+function retryLevel()  { chooseLevel(currentLevel); }
+
+function chooseLevel(lvl) {
+  currentLevel = lvl; roundIndex = 0; levelScores = [];
+  levelStartTime = 0; levelElapsed = '';
+  setRhythmHash('level' + lvl);
+  showScreen('game-screen');
+  refreshHeader();
+  rhythm = generateRhythm(); renderNotation(rhythm);
+  rhythmReady = true;
+  document.getElementById('score-display').textContent = '';
+  document.getElementById('result-detail').textContent = '';
+  document.getElementById('status').className = '';
+  document.getElementById('status').textContent = '';
+  document.getElementById('btn').textContent = 'Start';
+  document.getElementById('btn').onclick = LEVELS[currentLevel].trainerFor ? startTrainerRound : startRound; // trainerFor levels use playback-first mode
+  document.getElementById('btn').disabled = false;
+  document.getElementById('btn').style.display = '';
+  document.querySelectorAll('.game-nav-btn').forEach(b => b.disabled = false);
+}
+
+function refreshHeader() {
+  document.getElementById('lvl-badge').textContent  = 'Level ' + currentLevel + ' · ' + BPM + ' BPM';
+  document.getElementById('rhy-counter').textContent = (roundIndex + 1) + ' of ' + ROUNDS;
+  const dc = document.getElementById('progress-dots');
+  dc.innerHTML = '';
+  for (let i = 0; i < ROUNDS; i++) {
+    const d = document.createElement('div');
+    d.className = 'pdot';
+    if      (i < levelScores.length) d.classList.add(gradeClass(levelScores[i]));
+    else if (i === roundIndex)        d.classList.add('current');
+    dc.appendChild(d);
+  }
+}
+
+function gradeClass(s) {
+  return s >= 80 ? 'scored-a' : s >= 60 ? 'scored-b' : s >= 40 ? 'scored-c' : 'scored-d';
+}
+
+function showResults() {
+  // Stop the level timer
+  if (levelStartTime > 0) {
+    const ms = performance.now() - levelStartTime;
+    const totalSec = Math.round(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    levelElapsed = m > 0 ? m + 'm ' + s + 's' : s + 's';
+  }
+  showScreen('results-screen');
+  autoSubmitScore();
+  const avg = levelScores.length ? Math.round(levelScores.reduce((a,b) => a+b, 0) / levelScores.length) : 0;
+  const gc  = 'grade-' + (avg >= 80 ? 'a' : avg >= 60 ? 'b' : avg >= 40 ? 'c' : 'd');
+  document.getElementById('res-lvl-label').textContent = LEVELS[currentLevel].label;
+  const avgEl = document.getElementById('res-avg');
+  avgEl.textContent = avg + '%'; avgEl.className = 'avg-score ' + gc;
+
+  const barsEl = document.getElementById('res-bars');
+  barsEl.innerHTML = '';
+  levelScores.forEach((s, i) => {
+    const gc2 = 'grade-' + (s >= 80 ? 'a' : s >= 60 ? 'b' : s >= 40 ? 'c' : 'd');
+    const fillColor = s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--teal)' : s >= 40 ? 'var(--gold)' : 'var(--accent)';
+    barsEl.innerHTML +=
+      '<div class="bar-wrap">' +
+        '<div class="bar-pct ' + gc2 + '">' + s + '%</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="height:' + s + '%;background:' + fillColor + '"></div></div>' +
+        '<div class="bar-n">' + (i+1) + '</div>' +
+      '</div>';
+  });
+}
+
+// ── Rhythm generator ──────────────────────────────────────────────────────────
+function generateMeasure(offset, size) {
+  size = size || 4;
+  const allowed = LEVELS[currentLevel].types;
+  const POOL = [
+    {type:'quarter',  beats:1   },
+    {type:'eighth',   beats:0.5 },
+    {type:'half',     beats:2   },
+    {type:'dotted-half', beats:3},
+    {type:'qrest',    beats:1   },
+    {type:'sixteenth',beats:0.25},
+    {type:'mixed16',  beats:1   },  // 2×16th + 1×8th = 1 beat
+    {type:'dotted-combo', beats:2}, // dotted quarter (1.5) + eighth (0.5)
+    {type:'synco2',   beats:2   },  // 8th+quarter+8th or 8th+dotted-quarter = 2 beats
+  ].filter(t => allowed.includes(t.type));
+
+  const notes = []; let left = size;
+  while (left > 0) {
+    const avail = POOL.filter(n => n.beats <= left);
+    const wts   = avail.map(n =>
+      n.type==='quarter'      ? 35 :
+      n.type==='eighth'       ? 25 :
+      n.type==='half'         ? (left>=2?20:0) :
+      n.type==='dotted-half'  ? (left>=3?15:0) :
+      n.type==='sixteenth'    ? (left>=1?15:0) :
+      n.type==='mixed16'      ? (left>=1?20:0) :
+      n.type==='dotted-combo' ? (left>=2?25:0) :
+      n.type==='synco2'       ? (left>=2?25:0) :
+      10);  // qrest
+    const tot = wts.reduce((a,b)=>a+b,0);
+    let r = Math.random()*tot, idx=0;
+    for (let i=0;i<wts.length;i++){r-=wts[i];if(r<=0){idx=i;break;}}
+    const c = avail[idx];
+    if (c.type==='eighth') {
+      if (left>=1) {
+        notes.push({...c, startBeat:offset+(size-left)}); left-=.5;
+        notes.push({...c, startBeat:offset+(size-left)}); left-=.5;
+      } else {
+        notes.push({type:'qrest',beats:1,startBeat:offset+(size-left)}); left-=.5;
+      }
+    } else if (c.type==='sixteenth') {
+      if (left>=1) {
+        for (let k=0;k<4;k++){
+          notes.push({...c, startBeat:offset+(size-left)}); left-=0.25;
+        }
+      } else {
+        notes.push({type:'qrest',beats:left,startBeat:offset+(size-left)}); left=0;
+      }
+    } else if (c.type==='mixed16') {
+      // randomly: [16th,16th,8th] or [8th,16th,16th]
+      const variant = Math.random() < 0.5 ? 'sse' : 'ess'; // s=sixteenth e=eighth
+      const pattern = variant==='sse'
+        ? [{type:'sixteenth',beats:0.25},{type:'sixteenth',beats:0.25},{type:'eighth',beats:0.5}]
+        : [{type:'eighth',beats:0.5},{type:'sixteenth',beats:0.25},{type:'sixteenth',beats:0.25}];
+      pattern.forEach((n,k) => {
+        // tag each note with its group variant so renderer can find the sixteenth pair
+        notes.push({...n, startBeat:offset+(size-left), mixed16:variant, mixed16pos:k});
+        left-=n.beats;
+      });
+    } else if (c.type==='dotted-combo') {
+      // dotted quarter (1.5 beats) + single eighth (0.5 beats) = 2 beats total
+      notes.push({type:'dotted-quarter', beats:1.5, startBeat:offset+(size-left), comboGroup:true});
+      left -= 1.5;
+      notes.push({type:'combo-eighth',   beats:0.5, startBeat:offset+(size-left), comboGroup:true});
+      left -= 0.5;
+    } else if (c.type==='synco2') {
+      // randomly: eqe (8th+quarter+8th) or edq (8th+dotted-quarter)
+      const variant = Math.random() < 0.5 ? 'eqe' : 'edq';
+      const pattern = variant === 'eqe'
+        ? [{type:'eighth',beats:0.5},{type:'quarter',beats:1},{type:'eighth',beats:0.5}]
+        : [{type:'eighth',beats:0.5},{type:'dotted-quarter',beats:1.5}];
+      pattern.forEach((n,k) => {
+        notes.push({...n, startBeat:offset+(size-left), synco2:variant, synco2pos:k});
+        left -= n.beats;
+      });
+    } else {
+      notes.push({...c, startBeat:offset+(size-left)}); left-=c.beats;
+    }
+  }
+  return notes;
+}
+const LEVEL_REQUIRED = { '1t': null, 1: null, '2t': null, 2: 'qrest', '3t': null, 3: 'half', '4t': null, 4: null, '5t': null, 5: 'sixteenth', '6t': null, 6: 'sixteenth', '7t': null, 7: 'mixed16', '8t': null, 8: 'dotted-combo', '9t': null, 9: 'dotted-combo', '10t': 'synco2', 10: 'synco2' };
+
+function generateRhythm() {
+  const required = LEVEL_REQUIRED[currentLevel];
+  const bpm = LEVELS[currentLevel].beats;
+  let r;
+  do {
+    r = [...generateMeasure(0, bpm), ...generateMeasure(bpm, bpm)];
+  } while (required && !r.some(n =>
+    required === 'mixed16'      ? n.mixed16 :
+    required === 'synco2'       ? n.synco2 :
+    required === 'dotted-combo' ? n.type === 'dotted-quarter' :
+    n.type === required
+  ));
+  return r;
+}
+function computeExpectedTaps(r) { return r.filter(n=>n.type!=='qrest').map(n=>n.startBeat*BEAT_MS); }
+
+// ── SVG layout ────────────────────────────────────────────────────────────────
+const NS='http://www.w3.org/2000/svg', INK='#1a1a1a';
+const STAFF_TOP=30, LINE_GAP=11, STAFF_L=30, STAFF_R=645;
+const MID_BAR=STAFF_L+(STAFF_R-STAFF_L)/2;
+const HEAD_Y=STAFF_TOP+LINE_GAP*2, STEM_LEN=30;
+function sY(l){ return STAFF_TOP+l*LINE_GAP; }
+// noteX now takes a pre-computed xPositions map built from the rhythm
+let noteXMap = {};
+function buildNoteXMap(r) {
+  const MIN_SIXTEENTH_WEIGHT = 0.35;
+  const weights = r.map(n => {
+    if (n.type === 'sixteenth')      return MIN_SIXTEENTH_WEIGHT;
+    if (n.type === 'qrest')          return 1.4;
+    if (n.mixed16) return n.type === 'eighth' ? 0.6 : MIN_SIXTEENTH_WEIGHT;
+    if (n.synco2)  return n.type === 'quarter' ? 1.0 : n.type === 'dotted-quarter' ? 1.5 : 0.5;
+    if (n.type === 'dotted-quarter') return 1.5;
+    if (n.type === 'dotted-half')    return 3;
+    if (n.type === 'combo-eighth')   return 0.7;
+    return n.beats;
+  });
+
+  const bpm = LEVELS[currentLevel].beats || 4;
+  const m1end = r.findIndex(n => n.startBeat >= bpm);
+  const split  = m1end === -1 ? r.length : m1end;
+
+  const off = 20;
+  const m1s = STAFF_L + 42 + off, m1e = MID_BAR - 18;
+  const m2s = MID_BAR + 18 + off, m2e = STAFF_R - 14;
+
+  function assignX(startGlobal, endGlobal, start, end) {
+    const ws    = weights.slice(startGlobal, endGlobal);
+    const total = ws.reduce((a,b) => a+b, 0);
+    let acc = 0;
+    for (let i = startGlobal; i < endGlobal; i++) {
+      const wi = weights[i];
+      noteXMap[i] = start + (acc + wi/2) / total * (end - start);
+      acc += wi;
+    }
+  }
+  assignX(0,     split,    m1s, m1e);
+  assignX(split, r.length, m2s, m2e);
+}
+function noteX(beat, type, idx) {
+  if (noteXMap[idx] !== undefined) return noteXMap[idx];
+  const bpm = LEVELS[currentLevel].beats || 4;
+  return beat < bpm
+    ? (STAFF_L+42+20) + (beat/bpm) * (MID_BAR-18 - (STAFF_L+42+20))
+    : (MID_BAR+18+20) + ((beat-bpm)/bpm) * (STAFF_R-14 - (MID_BAR+18+20));
+}
+function svgEl(tag,attrs){
+  const e=document.createElementNS(NS,tag);
+  Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));
+  return e;
+}
+function drawStaff(svg){
+  for(let i=0;i<5;i++) svg.appendChild(svgEl('line',{x1:STAFF_L,y1:sY(i),x2:STAFF_R,y2:sY(i),stroke:INK,'stroke-width':1}));
+  svg.appendChild(svgEl('line',{x1:STAFF_L,  y1:sY(0),x2:STAFF_L,  y2:sY(4),stroke:INK,'stroke-width':2}));
+  svg.appendChild(svgEl('line',{x1:MID_BAR,  y1:sY(0),x2:MID_BAR,  y2:sY(4),stroke:INK,'stroke-width':1.5}));
+  svg.appendChild(svgEl('line',{x1:STAFF_R-4,y1:sY(0),x2:STAFF_R-4,y2:sY(4),stroke:INK,'stroke-width':1.5}));
+  svg.appendChild(svgEl('line',{x1:STAFF_R,  y1:sY(0),x2:STAFF_R,  y2:sY(4),stroke:INK,'stroke-width':3.5}));
+}
+function drawTimeSig(svg){
+  const top = (LEVELS[currentLevel].beats || 4).toString();
+  [0,1].forEach(i=>{
+    const t=svgEl('text',{x:STAFF_L+16,y:sY(i===0?1:3)+7,'font-family':'Georgia,serif',
+      'font-size':26,'font-weight':'bold','text-anchor':'middle',fill:INK});
+    t.textContent = i===0 ? top : '4'; svg.appendChild(t);
+  });
+}
+
+
+// ── Quarter rest (embedded image) ─────────────────────────────────────────────
+const EIGHTH_B64 = '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';
+const QREST_B64 = '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';
+function drawQRest(svg,x,g){
+  const top=sY(0)+1, bot=sY(4)+2, h=bot-top;
+  const imgH=h*.72, imgW=imgH*.3441;
+  const img=document.createElementNS(NS,'image');
+  img.setAttribute('x', x-imgW/2);
+  img.setAttribute('y', top+(h-imgH)/2);
+  img.setAttribute('width',  imgW);
+  img.setAttribute('height', imgH);
+  img.setAttribute('href','data:image/png;base64,'+QREST_B64);
+  img.setAttribute('class','qrest-img');
+  g.appendChild(img);
+}
+function drawSingleEighth(svg, x, idx) {
+  // Image is 344×274px. Notehead center is at (0.532, 0.349) of full image.
+  // We want head center at (x, HEAD_Y) and head to match quarter size (rx:6.5,ry:4.5).
+  // Content spans rows 65-273 (h=208) out of 274, matching SVG note height ~34.5px.
+  const imgH = 48.9;
+  const imgW = 61.4;
+  const imgX = x - 0.532 * imgW;
+  const imgY = HEAD_Y - 0.349 * imgH;
+  const g = svgEl('g', {id:'note-'+idx});
+  const img = document.createElementNS(NS, 'image');
+  img.setAttribute('x', imgX);
+  img.setAttribute('y', imgY);
+  img.setAttribute('width',  imgW);
+  img.setAttribute('height', imgH);
+  img.setAttribute('href', 'data:image/png;base64,' + EIGHTH_B64);
+  g.appendChild(img);
+  svg.appendChild(g);
+}
+
+
+function drawNote(svg,note,idx,beamed,r){
+  const measureIdx = r ? r.slice(0,idx).filter(n=>n.startBeat<4 === note.startBeat<4).length : idx;
+  const x=noteX(note.startBeat, note.type, idx), hy=HEAD_Y;
+  const g=svgEl('g',{id:'note-'+idx});
+  if (note.type==='qrest') { drawQRest(svg,x,g); svg.appendChild(g); return; }
+  if (note.type==='combo-eighth' || (note.synco2 && note.type==='eighth')) { drawSingleEighth(svg,x,idx); return; }
+  if (note.type==='half' || note.type==='dotted-half') {
+    g.appendChild(svgEl('ellipse',{cx:x,cy:hy,rx:7,ry:5,transform:'rotate(-15,'+x+','+hy+')',fill:'none',stroke:INK,'stroke-width':1.5}));
+    const sx=x-7, sy2=hy+STEM_LEN;
+    g.appendChild(svgEl('line',{x1:sx,y1:hy+2,x2:sx,y2:sy2,stroke:INK,'stroke-width':1.5}));
+    if (note.type==='dotted-half') {
+      g.appendChild(svgEl('circle',{cx:x+11,cy:hy-3,r:2,fill:INK}));
+    }
+  } else if (note.type==='dotted-quarter') {
+    // identical to quarter (filled, stem at x-5.5) plus a dot
+    g.appendChild(svgEl('ellipse',{cx:x,cy:hy,rx:7,ry:5,transform:'rotate(-15,'+x+','+hy+')',fill:INK}));
+    const sx=x-5.5, sy2=hy+STEM_LEN;
+    g.appendChild(svgEl('line',{x1:sx,y1:hy+2,x2:sx,y2:sy2,stroke:INK,'stroke-width':1.5}));
+    g.appendChild(svgEl('circle',{cx:x+10,cy:hy-3,r:1.8,fill:INK}));
+  } else {
+    // quarter, eighth, sixteenth — filled head, stem at x-5.5
+    g.appendChild(svgEl('ellipse',{cx:x,cy:hy,rx:7,ry:5,transform:'rotate(-15,'+x+','+hy+')',fill:INK}));
+    const sx=x-5.5, sy2=hy+STEM_LEN;
+    g.appendChild(svgEl('line',{x1:sx,y1:hy+2,x2:sx,y2:sy2,stroke:INK,'stroke-width':1.5}));
+    if (note.type==='eighth' && !beamed){
+      const p=document.createElementNS(NS,'path');
+      p.setAttribute('d','M'+sx+','+sy2+' C'+(sx+14)+','+(sy2-5)+' '+(sx+12)+','+(sy2-15)+' '+(sx+3)+','+(sy2-22));
+      p.setAttribute('stroke',INK); p.setAttribute('stroke-width',1.8); p.setAttribute('fill','none');
+      g.appendChild(p);
+    }
+    if (note.type==='sixteenth' && !beamed){
+      [0,8].forEach(off=>{
+        const p=document.createElementNS(NS,'path');
+        p.setAttribute('d','M'+sx+','+(sy2-off)+' C'+(sx+14)+','+(sy2-off-5)+' '+(sx+12)+','+(sy2-off-15)+' '+(sx+3)+','+(sy2-off-22));
+        p.setAttribute('stroke',INK); p.setAttribute('stroke-width',1.8); p.setAttribute('fill','none');
+        g.appendChild(p);
+      });
+    }
+  }
+  svg.appendChild(g);
+}
+function drawBeam(svg,indices,r){
+  if(indices.length<2)return;
+  const firstType = r[indices[0]].type;
+  const isSixteenth = firstType==='sixteenth' && !r[indices[0]].mixed16;
+  const isMixed16   = !!r[indices[0]].mixed16 || (r[indices[1]] && r[indices[1]].mixed16);
+  const by=HEAD_Y+STEM_LEN;
+  const x1=noteX(r[indices[0]].startBeat, r[indices[0]].type, indices[0])-5.5-0.75;
+  const x2=noteX(r[indices[indices.length-1]].startBeat, r[indices[indices.length-1]].type, indices[indices.length-1])-5.5+0.75;
+  // primary beam spans all notes
+  svg.appendChild(svgEl('rect',{x:x1,y:by-3,width:x2-x1,height:5.5,fill:INK,rx:1}));
+  // second full beam for pure sixteenth groups
+  if(isSixteenth){
+    svg.appendChild(svgEl('rect',{x:x1,y:by-11,width:x2-x1,height:5.5,fill:INK,rx:1}));
+  }
+  // partial second beam for mixed16 — only over the two sixteenth noteheads
+  if(isMixed16){
+    const variant = r[indices.find(i=>r[i].mixed16)].mixed16;
+    let sxIndices;
+    if(variant==='sse'){
+      // first two notes are sixteenths
+      sxIndices = [indices[0], indices[1]];
+    } else {
+      // last two notes are sixteenths
+      sxIndices = [indices[1], indices[2]];
+    }
+    const px1=noteX(r[sxIndices[0]].startBeat, r[sxIndices[0]].type, sxIndices[0])-5.5-0.75;
+    const px2=noteX(r[sxIndices[1]].startBeat, r[sxIndices[1]].type, sxIndices[1])-5.5+0.75;
+    svg.appendChild(svgEl('rect',{x:px1,y:by-11,width:px2-px1,height:5.5,fill:INK,rx:1}));
+  }
+}
+function renderNotation(r){
+  const svg=document.getElementById('notation-svg');
+  svg.innerHTML=''; drawStaff(svg); drawTimeSig(svg);
+  buildNoteXMap(r);
+  const groups=[]; let i=0;
+  while(i<r.length){
+    if(r[i].type==='sixteenth' && !r[i].mixed16){
+      groups.push({kind:'sixteenth-beam',indices:[i,i+1,i+2,i+3]}); i+=4;
+    } else if(r[i].mixed16 && r[i].mixed16pos===0){
+      groups.push({kind:'mixed16-beam',indices:[i,i+1,i+2],variant:r[i].mixed16}); i+=3;
+    } else if(r[i].synco2 && r[i].synco2pos===0){
+      const variant = r[i].synco2;
+      const count = variant === 'eqe' ? 3 : 2;
+      groups.push({kind:'synco2-beam', indices: Array.from({length:count},(_,k)=>i+k), variant});
+      i += count;
+    } else if(r[i].type==='eighth' && !r[i].mixed16){
+      const bpm2 = LEVELS[currentLevel].beats || 4;
+      const pair=i+1<r.length && r[i+1].type==='eighth' && !r[i+1].mixed16 &&
+                 Math.floor(r[i].startBeat/bpm2)===Math.floor(r[i+1].startBeat/bpm2);
+      if(pair){ groups.push({kind:'beam',indices:[i,i+1]}); i+=2; }
+      else    { groups.push({kind:'single',index:i}); i++; }
+    } else if(r[i].type==='dotted-quarter' || r[i].type==='combo-eighth'){
+      groups.push({kind:'single',index:i}); i++;
+    } else { groups.push({kind:'single',index:i}); i++; }
+  }
+  groups.forEach(g=>{
+    if(g.kind==='single'){ drawNote(svg,r[g.index],g.index,false,r); }
+    else if(g.kind==='synco2-beam'){
+      // all synco2 variants: unbeamed individual notes
+      g.indices.forEach(idx=>drawNote(svg,r[idx],idx,false,r));
+    }
+    else { g.indices.forEach(idx=>drawNote(svg,r[idx],idx,true,r)); drawBeam(svg,g.indices,r); }
+  });
+}
+
+// ── Continuous score → colour ─────────────────────────────────────────────────
+// score: 0.0 (miss) → 1.0 (perfect)
+// 1.0–0.7 : green → gold   |   0.7–0.0 : gold → red
+function scoreToColour(score) {
+  // With 90/10 weighting, a hit note scores 0.9-1.0, a miss scores 0.0
+  // Anything ≥0.5 is a hit → show green; below that → red
+  let r, g, b;
+  if (score >= 0.5) {
+    // 0.5–1.0 : gold → green
+    const t = (score - 0.5) / 0.5;
+    r = Math.round(200 + t * (52  - 200));
+    g = Math.round(151 + t * (193 - 151));
+    b = Math.round( 20 + t * (122 -  20));
+  } else {
+    // 0.0–0.5 : red → gold
+    const t = score / 0.5;
+    r = Math.round(176 + t * (200 - 176));
+    g = Math.round( 58 + t * (151 -  58));
+    b = Math.round( 46 + t * ( 20 -  46));
+  }
+  return 'rgb('+r+','+g+','+b+')';
+}
+function scoreToFilter(score) {
+  // Approximate CSS filter to recolour the quarter-rest image
+  // green=hit(1.0), gold=mid(0.7), red=miss(0.0)
+  if (score >= 0.85) return 'invert(56%) sepia(93%) saturate(400%) hue-rotate(87deg) brightness(95%)';
+  if (score >= 0.5)  return 'invert(55%) sepia(80%) saturate(500%) hue-rotate(0deg) brightness(100%)';
+  return                     'invert(22%) sepia(95%) saturate(600%) hue-rotate(340deg) brightness(90%)';
+}
+
+function colourNote(idx, score) {
+  const g = document.getElementById('note-'+idx); if (!g) return;
+  const c  = scoreToColour(score);
+  const fv = scoreToFilter(score);
+  g.querySelectorAll('ellipse,circle,rect,line,path,text,image').forEach(e => {
+    const tag=e.tagName, fill=e.getAttribute('fill');
+    if (tag==='image') { e.style.filter=fv; return; }
+    if (tag==='path' && fill && fill!=='none') e.setAttribute('fill', c);
+    else if (tag==='path'||tag==='line') { if (e.getAttribute('stroke')!=='none') e.setAttribute('stroke', c); }
+    if (tag==='circle'||tag==='rect'||tag==='text') e.setAttribute('fill', c);
+    if (tag==='ellipse') { fill==='none' ? e.setAttribute('stroke',c) : e.setAttribute('fill',c); }
+  });
+}
+function colourNoteHeld(idx){
+  const g=document.getElementById('note-'+idx); if(!g)return;
+  const c='#3a9e8f';
+  g.querySelectorAll('ellipse,circle,rect,line,path,text,image').forEach(e=>{
+    const tag=e.tagName,fill=e.getAttribute('fill');
+    if(tag==='image'){e.style.filter='invert(56%) sepia(60%) saturate(300%) hue-rotate(140deg)';return;}
+    if(tag==='path'&&fill&&fill!=='none') e.setAttribute('fill',c);
+    else if(tag==='path'||tag==='line'){if(e.getAttribute('stroke')!=='none')e.setAttribute('stroke',c);}
+    if(tag==='circle'||tag==='rect'||tag==='text') e.setAttribute('fill',c);
+    if(tag==='ellipse'){ fill==='none'?e.setAttribute('stroke',c):e.setAttribute('fill',c); }
+  });
+}
+
+
+
+// ── Beat lights ───────────────────────────────────────────────────────────────
+// ── Countdown display ─────────────────────────────────────────────────────────
+const COUNTDOWN_WORDS_4 = ['1', '2', 'Ready', 'Go!'];
+const COUNTDOWN_WORDS_3 = ['1', 'Ready', 'Go!'];
+const COUNTDOWN_WORDS_LISTEN_4 = ['1', '2', 'Listen', '…'];
+const COUNTDOWN_WORDS_LISTEN_3 = ['1', 'Listen', '…'];
+
+function lightNoteGreen(idx, durationMs) {
+  const GREEN = '#2d7a5f';
+  const INK_C = '#1a1a1a';
+  const g = document.getElementById('note-'+idx); if (!g) return;
+  // Light up green
+  g.querySelectorAll('ellipse,circle,rect,line,path,image').forEach(e => {
+    const tag = e.tagName, fill = e.getAttribute('fill');
+    if (tag === 'image') { e.style.filter = 'invert(39%) sepia(50%) saturate(400%) hue-rotate(110deg)'; return; }
+    if (fill && fill !== 'none') e.setAttribute('fill', GREEN);
+    const stroke = e.getAttribute('stroke');
+    if (stroke && stroke !== 'none') e.setAttribute('stroke', GREEN);
+  });
+  // Fade back to ink after duration
+  setTimeout(() => {
+    g.querySelectorAll('ellipse,circle,rect,line,path,image').forEach(e => {
+      const tag = e.tagName, fill = e.getAttribute('fill');
+      if (tag === 'image') { e.style.filter = ''; return; }
+      if (fill && fill !== 'none') e.setAttribute('fill', INK_C);
+      const stroke = e.getAttribute('stroke');
+      if (stroke && stroke !== 'none') e.setAttribute('stroke', INK_C);
+    });
+  }, durationMs);
+}
+
+function flashCountdownWord(beatIndex, words) {
+  const el = document.getElementById('countdown-word');
+  const word = words[beatIndex];
+  const isGo = beatIndex === words.length - 1;
+  el.textContent = word;
+  el.className = isGo ? 'go-word' : '';
+  void el.offsetWidth;
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), BEAT_MS * 0.8);
+}
+
+function clearCountdown() {
+  const el = document.getElementById('countdown-word');
+  el.classList.remove('flash');
+  el.textContent = '';
+}
+
+// ── Start round ───────────────────────────────────────────────────────────────
+function playNoteClick(time) {
+  // Same sound as a player tap — sine at 600Hz, short decay
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.connect(g); g.connect(actx.destination);
+  osc.frequency.value = 600; osc.type = 'sine';
+  g.gain.setValueAtTime(0.2, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.07);
+  osc.start(time); osc.stop(time + 0.08);
+}
+
+function startTrainerRound(){
+  if(actx.state==='suspended') actx.resume();
+  if(!rhythmReady){ rhythm=generateRhythm(); }
+  rhythmReady=false;
+  expectedTaps=computeExpectedTaps(rhythm);
+  tapResults=[]; playerTaps=[]; pressNoteIdx=-1; releaseScores={};
+  renderNotation(rhythm); refreshHeader();
+  document.getElementById('score-display').textContent='';
+  document.getElementById('result-detail').textContent='';
+  document.getElementById('status').className='active';
+  document.getElementById('status').textContent='';
+  document.getElementById('btn').style.display='none';
+  document.getElementById('btn').disabled=true;
+  document.querySelectorAll('.game-nav-btn').forEach(b => b.disabled = true);
+  clearCountdown();
+
+  const bpm = LEVELS[currentLevel].beats || 4;
+  const countInWords       = bpm === 3 ? COUNTDOWN_WORDS_3       : COUNTDOWN_WORDS_4;
+  const listenCountInWords = bpm === 3 ? COUNTDOWN_WORDS_LISTEN_3 : COUNTDOWN_WORDS_LISTEN_4;
+  const countInBeats = countInWords.length;
+  const totalMs = totalBeats() * BEAT_MS;
+  const gapMs = 0; // go straight into count-in after demo
+
+  gamePhase = 'countdown';
+
+  // ── Phase 1: count-in for DEMO — show static "Listen" throughout ──
+  document.getElementById('countdown-word').textContent = 'Listen';
+  document.getElementById('countdown-word').className = '';
+  document.getElementById('countdown-word').classList.add('flash');
+  for(let i=0;i<countInBeats;i++){
+    playClick(i===0, actx.currentTime+(i*BEAT_MS)/1000);
+  }
+
+  // ── Phase 2: play demo (metronome + note clicks + note highlights) ──
+  const demoStart = countInBeats * BEAT_MS;
+  // Metronome beats during demo
+  for(let i=0;i<totalBeats();i++){
+    playClick(i%bpm===0, actx.currentTime+(demoStart+i*BEAT_MS)/1000);
+  }
+  // Note-attack clicks + green highlight on each note
+  rhythm.forEach((n, noteIdx) => {
+    if(n.type==='qrest') return;
+    const noteMs = demoStart + n.startBeat * BEAT_MS;
+    playNoteClick(actx.currentTime + noteMs/1000);
+    const durationMs = Math.max(n.beats * BEAT_MS * 0.85, 120);
+    setTimeout(() => lightNoteGreen(noteIdx, durationMs), noteMs);
+  });
+
+  // Clear "Listen" when demo ends, then show tap count-in
+  setTimeout(() => clearCountdown(), demoStart + totalMs);
+
+  // Status shows TAP when demo ends and tap count-in begins
+  setTimeout(()=>{
+    if(gamePhase==='idle'||gamePhase==='done') return;
+    gamePhase='demo';
+  }, demoStart);
+
+  // ── Phase 3: gap + second count-in ──
+  const tapCountInStart = demoStart + totalMs + gapMs;
+  for(let i=0;i<countInBeats;i++){
+    const t = tapCountInStart + i*BEAT_MS;
+    playClick(i===0, actx.currentTime+t/1000);
+    setTimeout(()=>{ if(gamePhase==='idle'||gamePhase==='done') return; flashCountdownWord(i, countInWords); }, t);
+  }
+
+  // ── Phase 4: tapping phase ──
+  const tapStart = tapCountInStart + countInBeats*BEAT_MS;
+  startTime = performance.now() + tapStart;
+
+  for(let i=0;i<totalBeats();i++){
+    const delay = tapStart + i*BEAT_MS;
+    playClick(i%bpm===0, actx.currentTime+delay/1000);
+    setTimeout(()=>{
+      if(gamePhase==='idle'||gamePhase==='done') return;
+      if(i===0){
+        gamePhase='playing';
+        if(roundIndex===0 && levelStartTime===0) levelStartTime=performance.now();
+        clearCountdown();
+        document.getElementById('status').className='go';
+        document.getElementById('status').textContent='TAP! (Spacebar)';
+      }
+    }, delay);
+  }
+
+  // ── End of round ──
+  setTimeout(()=>{
+    if(gamePhase==='playing'||gamePhase==='countdown'||gamePhase==='demo'){
+      gamePhase='done'; clearCountdown(); finishRound();
+    }
+  }, tapStart + totalBeats()*BEAT_MS + 350);
+}
+
+// ── Level options modal ───────────────────────────────────────────────────────
+let pendingLevel = 1;
+
+function openModal(lvl) {
+  pendingLevel = lvl;
+  document.getElementById('modal-title').textContent = LEVELS[lvl].label.replace(/ —.*/, '');
+  document.getElementById('level-modal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('level-modal').style.display = 'none';
+}
+
+function startLevelMode(mode) {
+  closeModal();
+  currentMode  = mode; // track for score submission (trainer / moderate / fast)
+  backingTrack = null;
+
+  if      (mode === 'fast')    { BPM = 120; BEAT_MS = 60000 / BPM; }
+  else                         { BPM = 90;  BEAT_MS = 60000 / BPM; }
+
+  const lvlKey = mode === 'trainer' ? pendingLevel + 't' : pendingLevel;
+  chooseLevel(lvlKey);
+}
+
+
+
+
+
+
+
+
+
+
+function startRound(){
+  if(actx.state==='suspended') actx.resume();
+  if(!rhythmReady){ rhythm=generateRhythm(); }
+  rhythmReady=false;
+  expectedTaps=computeExpectedTaps(rhythm);
+  tapResults=[]; playerTaps=[]; pressNoteIdx=-1; releaseScores={};
+  renderNotation(rhythm); refreshHeader();
+  document.getElementById('score-display').textContent='';
+  document.getElementById('result-detail').textContent='';
+  document.getElementById('status').className='active';
+  document.getElementById('status').textContent='';
+  document.getElementById('btn').style.display='none';
+  document.getElementById('btn').disabled=true;
+  document.querySelectorAll('.game-nav-btn').forEach(b => b.disabled = true);
+  clearCountdown();
+
+  const bpm = LEVELS[currentLevel].beats || 4;
+  const countInWords = bpm === 3 ? COUNTDOWN_WORDS_3 : COUNTDOWN_WORDS_4;
+  const countInBeats = countInWords.length;
+
+  startTime=performance.now()+countInBeats*BEAT_MS;
+  gamePhase='countdown';
+
+  for(let i=0;i<countInBeats;i++){
+    playClick(i===0, actx.currentTime+(i*BEAT_MS)/1000);
+    setTimeout(()=>flashCountdownWord(i, countInWords), i*BEAT_MS);
+  }
+  for(let i=0;i<totalBeats();i++){
+    const delay=countInBeats*BEAT_MS+i*BEAT_MS;
+    playClick(i%LEVELS[currentLevel].beats===0, actx.currentTime+delay/1000);
+    setTimeout(()=>{
+      if(gamePhase==='idle'||gamePhase==='done') return;
+      if(i===0){
+        gamePhase='playing';
+        if(roundIndex === 0 && levelStartTime === 0) levelStartTime = performance.now();
+        clearCountdown();
+        document.getElementById('status').className='go';
+        document.getElementById('status').textContent='TAP! (Spacebar)';
+      }
+    }, delay);
+  }
+  setTimeout(()=>{
+    if(gamePhase==='playing'||gamePhase==='countdown'){ gamePhase='done'; clearCountdown(); finishRound(); }
+  }, countInBeats*BEAT_MS+totalBeats()*BEAT_MS+350);
+}
+
+// ── Continuous tap scoring ────────────────────────────────────────────────────
+// Returns 0.0–1.0 for attack timing
+function atkScore(errorMs) {
+  const e = Math.abs(errorMs);
+  if (e <= PERFECT_ATK) return 1.0;
+  if (e >= MISS_WIN)    return 0.0;
+  return 1.0 - (e - PERFECT_ATK) / (MISS_WIN - PERFECT_ATK);
+}
+// Returns 0.0–1.0 for release timing
+function relScore(errorMs) {
+  const e = Math.abs(errorMs);
+  if (e <= PERFECT_REL) return 1.0;
+  if (e >= MISS_WIN)    return 0.0;
+  return 1.0 - (e - PERFECT_REL) / (MISS_WIN - PERFECT_REL);
+}
+
+// tapResults[i] = { atkScore, atkElapsed, noteIdx } for each expected tap
+// releaseScores[noteIdx] = relScore (filled in by handleRelease)
+let releaseScores = {};
+
+// ── Tap handlers ──────────────────────────────────────────────────────────────
+function handlePress(){
+  if(gamePhase!=='playing'&&gamePhase!=='countdown') return;
+  const elapsed=performance.now()-startTime;
+  document.getElementById('tapFlash').classList.add('lit');
+  setTimeout(()=>document.getElementById('tapFlash').classList.remove('lit'),80);
+  playTap(); playerTaps.push(elapsed);
+
+  // Find closest expected tap
+  let bestIdx=-1, bestDist=Infinity;
+  expectedTaps.forEach((et,i)=>{ const d=Math.abs(elapsed-et); if(d<bestDist){bestDist=d;bestIdx=i;} });
+  pressNoteIdx=-1;
+  if(bestIdx<0) return;
+
+  // Too far from any note = extra tap
+  if(bestDist>=MISS_WIN){ tapResults.push('extra'); return; }
+
+  // Map tap index → rhythm note index
+  let noteIdx=-1, cnt=0;
+  for(let i=0;i<rhythm.length;i++){
+    if(rhythm[i].type!=='qrest'){ if(cnt===bestIdx){noteIdx=i;break;} cnt++; }
+  }
+
+  const aScore = atkScore(bestDist);
+  tapResults[bestIdx] = { atkScore: aScore, noteIdx };
+  pressNoteIdx = noteIdx;
+
+  // Show teal "held" glow while key is down; resolve on release
+  colourNoteHeld(noteIdx);
+}
+
+function handleRelease(){
+  if(pressNoteIdx<0) return;
+  const noteIdx   = pressNoteIdx; pressNoteIdx = -1;
+  const elapsed   = performance.now()-startTime;
+  const note      = rhythm[noteIdx];
+  const releaseET = (note.startBeat + note.beats) * BEAT_MS;
+  const rSc       = relScore(elapsed - releaseET);
+
+  releaseScores[noteIdx] = rSc;
+
+  // Find the tapResults entry for this note
+  let tapIdx=-1, cnt=0;
+  for(let i=0;i<rhythm.length;i++){
+    if(rhythm[i].type!=='qrest'){
+      if(i===noteIdx){ tapIdx=cnt; break; }
+      cnt++;
+    }
+  }
+
+  const aSc     = (tapIdx>=0 && tapResults[tapIdx] && typeof tapResults[tapIdx]==='object')
+    ? tapResults[tapIdx].atkScore : 0;
+  const combined = aSc*0.8 + rSc*0.2;
+  colourNote(noteIdx, combined);
+}
+
+// ── Scoring ───────────────────────────────────────────────────────────────────
+function computeScore(){
+  const total=expectedTaps.length; if(!total) return 100;
+  let sum=0;
+  for(let i=0;i<total;i++){
+    const entry=tapResults[i];
+    if(!entry||entry==='extra'){ 
+      // missed note — colour it red
+      let cnt=0;
+      for(let j=0;j<rhythm.length;j++){
+        if(rhythm[j].type!=='qrest'){ if(cnt===i){ colourNote(j,0); break; } cnt++; }
+      }
+      sum+=0; continue;
+    }
+    const aSc = entry.atkScore || 0;
+    const rSc = releaseScores[entry.noteIdx] !== undefined ? releaseScores[entry.noteIdx] : 0;
+    const noteScore = aSc*0.9 + rSc*0.1;
+    // If no release was recorded yet (key still held at round end), finalise colour now
+    if(releaseScores[entry.noteIdx]===undefined) colourNote(entry.noteIdx, noteScore);
+    sum += noteScore;
+  }
+  const extras=tapResults.filter(r=>r==='extra').length;
+  return Math.round((sum/(total+extras))*100);
+}
+
+function finishRound(){
+  const score=computeScore();
+
+
+
+  levelScores.push(score);
+  refreshHeader();
+
+  const extras=tapResults.filter(r=>r==='extra').length;
+  const total=expectedTaps.length;
+  // Count notes by score range for display
+  let perfect=0, good=0, poor=0, missed=0;
+  for(let i=0;i<total;i++){
+    const entry=tapResults[i];
+    if(!entry||entry==='extra'){ missed++; continue; }
+    const atk=entry.atkScore||0;
+    const rel=releaseScores[entry.noteIdx]!==undefined?releaseScores[entry.noteIdx]:0;
+    const ns=atk*0.9+rel*0.1;    if(ns>=0.9) perfect++; else if(ns>=0.6) good++; else if(ns>0) poor++; else missed++;
+  }
+
+  document.getElementById('score-display').textContent='Score: '+score+'%';
+  document.getElementById('result-detail').textContent=
+    '★ '+perfect+' perfect  ✓ '+good+' good  ~ '+poor+' poor  ✗ '+missed+' miss'+(extras?' +'+extras+' extra':'');
+
+  const isLast=roundIndex>=ROUNDS-1;
+  document.getElementById('status').className='done';
+
+  if(isLast){
+    document.getElementById('status').textContent='Level complete!';
+    document.getElementById('btn').style.display='none';
+    setTimeout(()=>{
+      document.getElementById('btn').style.display='';
+      document.getElementById('btn').disabled=false;
+      document.getElementById('btn').onclick=startRound;
+      document.querySelectorAll('.game-nav-btn').forEach(b => b.disabled = false);
+      showResults();
+    }, 1800);
+  } else {
+    roundIndex++;
+    refreshHeader();
+    document.getElementById('status').textContent='Round '+roundIndex+' done — keep going!';
+    document.getElementById('btn').textContent='Next Rhythm';
+    document.getElementById('btn').onclick= LEVELS[currentLevel].trainerFor ? startTrainerRound : startRound;
+    document.getElementById('btn').disabled=false;
+    document.getElementById('btn').style.display='';
+    document.querySelectorAll('.game-nav-btn').forEach(b => b.disabled = false);
+  }
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.code!=='Space') return;
+  e.preventDefault(); if(e.repeat) return;
+  keyIsDown=true;
+  if(gamePhase==='playing'||gamePhase==='countdown') handlePress();
+  else if(gamePhase==='idle'||gamePhase==='done'){
+    if(document.getElementById('game-screen').style.display!=='none')
+      document.getElementById('btn').click();
+  }
+});
+document.addEventListener('keyup',e=>{
+  if(e.code!=='Space') return;
+  keyIsDown=false; handleRelease();
+});
+
+// ── Inject real quarter-rest image into menu SVGs on load ─────────────────────
+function injectMenuRests() {
+  document.querySelectorAll('.menu-rest-placeholder').forEach(el => {
+    const x  = parseFloat(el.getAttribute('data-x'));
+    const img = document.createElementNS('http://www.w3.org/2000/svg','image');
+    // staff spans y=10..42, height=32px in menu SVG coords; rest is 90% of that
+    const h = 32 * 0.72, w = h * 0.3441;
+    img.setAttribute('x', x - w/2);
+    img.setAttribute('y', 10 + (32 - h)/2);
+    img.setAttribute('width',  w);
+    img.setAttribute('height', h);
+    img.setAttribute('href', 'data:image/png;base64,' + QREST_B64);
+    el.parentNode.replaceChild(img, el);
+  });
+}
+function injectMenuEighths() {
+  const imgH = 48.9, imgW = 61.4;
+  const headFracX = 0.532, headFracY = 0.349, headY = 26;
+  document.querySelectorAll('.menu-eighth-placeholder').forEach(el => {
+    const cx = parseFloat(el.getAttribute('data-cx'));
+    const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+    img.setAttribute('x',      cx - headFracX * imgW);
+    img.setAttribute('y',      headY - headFracY * imgH);
+    img.setAttribute('width',  imgW);
+    img.setAttribute('height', imgH);
+    img.setAttribute('href', 'data:image/png;base64,' + EIGHTH_B64);
+    el.parentNode.replaceChild(img, el);
+  });
+}
+document.addEventListener('DOMContentLoaded', injectMenuEighths);
+
+// ── HASH ROUTING ─────────────────────────────────────────────────────────────
+function setRhythmHash(route) {
+  window._settingHash = true;
+  window.location.hash = route ? '#rhythm/' + route : '#rhythm/';
+  setTimeout(function() { window._settingHash = false; }, 50);
+}
+
+function navigateRhythmHash(hash) {
+  hash = hash.replace(/^#\/?/, '');
+  if (hash.startsWith('rhythm/')) hash = hash.slice(7);
+  if (!hash || hash === 'rhythm') return; // just show menu, initApp handles that
+
+  var m = hash.match(/^level([1-9])$/);
+  if (m) {
+    var lvl = parseInt(m[1]);
+    if (LEVELS[lvl]) { openModal(lvl); }
+  }
+}
+
+window.addEventListener('hashchange', function() {
+  if (window._settingHash) return;
+  navigateRhythmHash(window.location.hash);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+initApp();
+</script>
+
+</body>
+</html>
