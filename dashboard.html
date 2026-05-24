@@ -368,9 +368,11 @@
       const nextUrl     = buildModuleUrl(module.filename, bestScore);
       const nextLevel   = (nextUrl.match(/level=([\d.]+)/) || [])[1] || "1";
       const nextMode    = (nextUrl.match(/mode=(\w+)/)     || [])[1] || null;
+      // For rhythm, combine level + mode offset to get the true decimal (e.g. 2 + trainer → 2.1)
+      const modeOffset  = nextMode === 'trainer' ? 0.1 : nextMode === 'fast' ? 0.3 : nextMode === 'moderate' ? 0.2 : 0;
       const nextLabel   = nextMode
-        ? "Level " + parseFloat(nextLevel).toFixed(1)   // rhythm: show decimal
-        : "Level " + nextLevel;                          // staffhero: show integer
+        ? "Level " + (parseFloat(nextLevel) + modeOffset).toFixed(1)
+        : "Level " + nextLevel;
 
       const meta = bestScore
         ? nextLabel + " · Best " + Math.round(bestScore.bestPercent) + "%"
