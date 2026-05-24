@@ -454,9 +454,7 @@
           sessionStorage.setItem("studentClass",      data.class);
           sessionStorage.setItem("studentInstrument", data.instrument || "Violin");
 
-          welcomeName.textContent = data.firstName;
-          loginSection.style.display  = "none";
-          welcomeSection.classList.add("show");
+          window.location.href = "dashboard.html";
 
         } else {
           const messages = {
