@@ -692,11 +692,21 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_REo7dnRZo3fny_xv3
 const _sessionNumber = sessionStorage.getItem('studentNumber');
 if (!_sessionNumber) { window.location.href = 'index.html'; throw new Error('No session'); }
 
+// Read level + mode from URL params (passed by dashboard)
+const _urlParams = new URLSearchParams(window.location.search);
+const _urlLevel  = parseInt(_urlParams.get('level'))  || null;
+const _urlMode   = _urlParams.get('mode')             || null;
+
 // Tracks the current sub-level mode (trainer / moderate / fast)
 let currentMode = 'moderate';
 
-// Called on page load
+// Called on page load — jump straight to level/mode if URL params present
 function initApp() {
+  if (_urlLevel && _urlMode) {
+    pendingLevel = _urlLevel;
+    startLevelMode(_urlMode);
+    return;
+  }
   showScreen('menu-screen');
   if (window.location.hash && window.location.hash !== '#' && window.location.hash !== '#rhythm/') {
     navigateRhythmHash(window.location.hash);
@@ -737,7 +747,7 @@ async function autoSubmitScore() {
         studentNumber,
         moduleId:        'rhythm_tap',
         level:           levelVal,
-        score:           Math.round(avg * levelScores.length),
+        score:           0, // rhythm_tap has no raw score — percent is the measure
         percent:         avg,
         durationSeconds: totalSec,
         missedItems:     ''

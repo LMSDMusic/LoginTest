@@ -364,12 +364,11 @@
       const level = bestScore ? bestScore.level : 1;
       const threshold   = MASTERY_THRESHOLD[module.filename] ?? DEFAULT_THRESHOLD;
       const advanced    = bestScore && bestScore.bestPercent >= threshold;
-      const metaLevel   = bestScore ? (advanced ? bestScore.level + 1 : bestScore.level) : 1;
       const meta        = bestScore
         ? (advanced
-            ? "Level " + metaLevel + " · Ready to advance!"
-            : "Level " + bestScore.level + " · Best " + Math.round(bestScore.bestPercent) + "%")
-        : "Level 1 · Not Started";
+            ? "Ready to advance! · Best " + Math.round(bestScore.bestPercent) + "%"
+            : levelLabel(module.filename, bestScore.level) + " · Best " + Math.round(bestScore.bestPercent) + "%")
+        : "Not Started";
 
       const upNextUrl = buildModuleUrl(module.filename, bestScore);
       area.innerHTML = `
@@ -394,7 +393,7 @@
 
         let metaHtml;
         if (bs) {
-          metaHtml = `Level <strong>${bs.level}</strong> &nbsp;·&nbsp; Best <strong>${Math.round(bs.bestPercent)}%</strong>`;
+          metaHtml = `${levelLabel(mod.filename, bs.level)} &nbsp;·&nbsp; Best <strong>${Math.round(bs.bestPercent)}%</strong>`;
         } else {
           metaHtml = "Not Started";
         }
@@ -484,21 +483,59 @@
     // Add an entry here when you add a new module.
     const MASTERY_THRESHOLD = {
       "staffhero.html" : 81,
+      "rhythm.html"    : 81,
       // "pitch.html"  : 85,
-      // "rhythm.html" : 80,
     };
     const DEFAULT_THRESHOLD = 81;
 
-    // Builds a URL with a suggested level parameter.
-    // Uses per-module mastery threshold to decide whether to advance.
-    // Falls back to level 1 if no attempt data exists.
+    // Builds a URL with suggested level (and mode for rhythm) from BestScores.
+    // Returns a human-readable level label.
+    // For rhythm, decodes float sub-levels: 1.1 → "Level 1 · Trainer"
+    function levelLabel(filename, level) {
+      if (filename === "rhythm.html" && level > 0) {
+        const base = Math.floor(level);
+        const sub  = Math.round((level - base) * 10);
+        const subName = sub === 1 ? "Trainer" : sub === 2 ? "Moderate" : "Fast";
+        return "Level <strong>" + base + "</strong> · " + subName;
+      }
+      return "Level <strong>" + level + "</strong>";
+    }
+
     function buildModuleUrl(filename, bestScore) {
+      if (filename === "rhythm.html") return buildRhythmUrl(bestScore);
       if (!bestScore || bestScore.level === 0) return filename + "?level=1";
       const threshold = MASTERY_THRESHOLD[filename] ?? DEFAULT_THRESHOLD;
       const suggestedLevel = bestScore.bestPercent >= threshold
         ? bestScore.level + 1
         : bestScore.level;
       return filename + "?level=" + suggestedLevel;
+    }
+
+    // Rhythm uses float levels: 1.1=trainer, 1.2=moderate, 1.3=fast, 2.1=next level trainer...
+    // Advancement steps through sub-levels before moving to the next level.
+    function buildRhythmUrl(bestScore) {
+      const threshold = MASTERY_THRESHOLD["rhythm.html"] ?? DEFAULT_THRESHOLD;
+      if (!bestScore || bestScore.level === 0) return "rhythm.html?level=1&mode=trainer";
+
+      const baseLevel = Math.floor(bestScore.level);
+      const subLevel  = Math.round((bestScore.level - baseLevel) * 10); // 1, 2, or 3
+
+      let nextBase = baseLevel;
+      let nextSub;
+
+      if (bestScore.bestPercent >= threshold) {
+        if (subLevel < 3) {
+          nextSub = subLevel + 1;           // advance sub-level: 1→2→3
+        } else {
+          nextBase = baseLevel + 1;         // advance to next full level
+          nextSub  = 1;                     // back to trainer
+        }
+      } else {
+        nextSub = subLevel;                 // stay at same sub-level
+      }
+
+      const mode = nextSub === 1 ? "trainer" : nextSub === 2 ? "moderate" : "fast";
+      return "rhythm.html?level=" + nextBase + "&mode=" + mode;
     }
 
     function escHtml(str) {
