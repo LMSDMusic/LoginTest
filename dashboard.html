@@ -273,6 +273,7 @@
     }
 
     .signout-btn:hover { color: var(--text); text-decoration: underline; }
+
   </style>
 </head>
 
@@ -419,12 +420,18 @@
     }
 
     // ── UP NEXT LOGIC ────────────────────────────────────────
-    // Suggests the module the student worked on most recently.
-    // Falls back to the first module if nothing has been attempted.
-    function pickUpNext(modules, bestScoresMap) {
+    // Uses todaysModule (set by teacher) to pick the Up Next module.
+    // Falls back to most recently played, then first module.
+    function pickUpNext(modules, bestScoresMap, todaysModuleId) {
+      // 1. Use teacher's selection if set and valid
+      if (todaysModuleId) {
+        const teacherPick = modules.find(m => m.moduleId === todaysModuleId);
+        if (teacherPick) return teacherPick;
+      }
+
+      // 2. Fall back to most recently played
       let latest     = null;
       let latestDate = null;
-
       modules.forEach(mod => {
         const bs = bestScoresMap[mod.moduleId];
         if (bs && bs.lastAttempt) {
@@ -436,7 +443,7 @@
         }
       });
 
-      // Nothing attempted yet — suggest first module
+      // 3. Nothing attempted yet — use first module
       return latest || (modules.length > 0 ? modules[0] : null);
     }
 
@@ -467,7 +474,7 @@
         const modules = data.modules || [];
 
         // Up Next
-        const upNextModule = pickUpNext(modules, bestScoresMap);
+        const upNextModule = pickUpNext(modules, bestScoresMap, data.todaysModule || null);
         const upNextIndex  = modules.indexOf(upNextModule);
         const upNextTheme  = MODULE_THEMES[upNextIndex % MODULE_THEMES.length];
         renderUpNext(upNextModule, bestScoresMap[upNextModule?.moduleId], upNextTheme);
