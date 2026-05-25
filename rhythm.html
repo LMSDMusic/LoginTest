@@ -301,6 +301,44 @@
   }
   .modal-cancel:hover { border-color: var(--text); color: var(--text); }
 
+
+  /* ── Locked level buttons ── */
+  .lvl-btn.locked {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    position: relative;
+  }
+  .lvl-btn.locked::after {
+    content: '🔒';
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 1rem;
+    opacity: 0.8;
+  }
+  .lvl-btn.locked .lvl-num {
+    filter: grayscale(0.7);
+  }
+  .lvl-btn.locked .lvl-info h3 {
+    color: var(--muted);
+  }
+
+  /* ── Locked modal options ── */
+  .modal-opt.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+    position: relative;
+  }
+  .modal-opt.locked::after {
+    content: '🔒';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+  }
 </style>
 </head>
 <body>
@@ -707,8 +745,10 @@ if (!_sessionNumber) { window.location.href = 'index.html'; throw new Error('No 
 
 // Read level + mode from URL params (passed by dashboard)
 const _urlParams = new URLSearchParams(window.location.search);
-const _urlLevel  = parseInt(_urlParams.get('level'))  || null;
-const _urlMode   = _urlParams.get('mode')             || null;
+const _urlLevel  = parseInt(_urlParams.get('level'))   || null;
+const _urlMode   = _urlParams.get('mode')              || null;
+const _urlMenu   = _urlParams.get('menu') === 'true';
+const _maxLevel  = parseFloat(_urlParams.get('maxLevel')) || null;
 
 // Tracks the current sub-level mode (trainer / moderate / fast)
 let currentMode = 'moderate';
@@ -720,14 +760,40 @@ function decimalLevel() {
   return (base + offset).toFixed(1);
 }
 
+// Applies lock styling to level buttons and modal options based on _maxLevel
+function applyLevelLocks() {
+  if (!_maxLevel) return;
+  const maxBase = Math.floor(_maxLevel);
+  document.querySelectorAll('.lvl-btn').forEach(btn => {
+    const match = btn.className.match(/l(\d+)/);
+    if (!match) return;
+    const lvl = parseInt(match[1]);
+    if (lvl > maxBase) btn.classList.add('locked');
+  });
+}
+
+// Applies sub-level locks to modal options for the boundary level
+function applyModalLocks(lvl) {
+  if (!_maxLevel) return;
+  const maxBase = Math.floor(_maxLevel);
+  const maxSub  = Math.round((_maxLevel - maxBase) * 10); // 1=trainer,2=moderate,3=fast
+  const opts    = document.querySelectorAll('.modal-opt');
+  opts.forEach((opt, i) => {
+    const subOffset = i + 1; // 0=trainer(1), 1=moderate(2), 2=fast(3)
+    const isLocked  = lvl > maxBase || (lvl === maxBase && subOffset > maxSub);
+    opt.classList.toggle('locked', isLocked);
+  });
+}
+
 // Called on page load — jump straight to level/mode if URL params present
 function initApp() {
-  if (_urlLevel && _urlMode) {
+  if (_urlLevel && _urlMode && !_urlMenu) {
     pendingLevel = _urlLevel;
     startLevelMode(_urlMode);
     return;
   }
   showScreen('menu-screen');
+  if (_maxLevel) applyLevelLocks();
   if (window.location.hash && window.location.hash !== '#' && window.location.hash !== '#rhythm/') {
     navigateRhythmHash(window.location.hash);
   }
