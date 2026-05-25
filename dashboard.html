@@ -413,7 +413,9 @@
           ? buildRhythmMenuUrl(bs)
           : (mod.filename === "staffhero.html")
             ? buildStaffHeroMenuUrl(bs)
-            : buildModuleUrl(mod.filename, bs);
+            : (mod.filename === "pitch.html")
+              ? buildPitchMenuUrl(bs)
+              : buildModuleUrl(mod.filename, bs);
         card.innerHTML   = `
           <div class="mod-icon ${theme.color}">${theme.emoji}</div>
           <div class="card-title">${escHtml(mod.title)}</div>
@@ -503,7 +505,7 @@
     const MASTERY_THRESHOLD = {
       "staffhero.html" : 81,
       "rhythm.html"    : 81,
-      // "pitch.html"  : 85,
+      "pitch.html"     : 81,
     };
     const DEFAULT_THRESHOLD = 81;
 
@@ -512,7 +514,7 @@
     // For rhythm, decodes float sub-levels: 1.1 → "Level 1.1"
     // For all others (staff hero etc.), shows integer level: "Level 3"
     function levelLabel(filename, level) {
-      if (filename === "rhythm.html" && level > 0) {
+      if ((filename === "rhythm.html" || filename === "pitch.html") && level > 0) {
         return "Level <strong>" + parseFloat(level).toFixed(1) + "</strong>";
       }
       return "Level <strong>" + level + "</strong>";
@@ -520,6 +522,7 @@
 
     function buildModuleUrl(filename, bestScore) {
       if (filename === "rhythm.html") return buildRhythmUrl(bestScore);
+      if (filename === "pitch.html")  return buildPitchUrl(bestScore);
       if (!bestScore || bestScore.level === 0) return filename + "?level=1";
       const threshold = MASTERY_THRESHOLD[filename] ?? DEFAULT_THRESHOLD;
       const suggestedLevel = bestScore.bestPercent >= threshold
@@ -537,11 +540,60 @@
       return "rhythm.html?menu=true&maxLevel=" + (baseLevel + 1) + "&bestLevel=" + bestScore.level.toFixed(1);
     }
 
+    // Returns the ensemble for a given instrument name
+    function getEnsembleForInstrument(instrName) {
+      const orchInstr = ['Violin','Viola','Cello','Bass'];
+      if (orchInstr.includes(instrName)) return 'orchestra';
+      return 'band';
+    }
+
+    // Builds the menu URL for Pitch module cards.
+    function buildPitchMenuUrl(bestScore) {
+      const instrName  = sessionStorage.getItem('studentInstrument') || 'Violin';
+      const isOrch     = getEnsembleForInstrument(instrName) === 'orchestra';
+      if (!bestScore || bestScore.level === 0) {
+        return "pitch.html?menu=true&maxLevel=1.1&bestLevel=0";
+      }
+      const baseLevel  = Math.floor(bestScore.level);
+      const subLevel   = Math.round((bestScore.level - baseLevel) * 10);
+      // Next level: for orch .1→.2→next base.1; for band .1→next base.1
+      let nextBase = baseLevel;
+      let nextSub;
+      if (bestScore.bestPercent >= (MASTERY_THRESHOLD["pitch.html"] ?? DEFAULT_THRESHOLD)) {
+        if (isOrch && subLevel === 1) {
+          nextSub = 2; // orch: notes → fingering
+        } else {
+          nextBase = baseLevel + 1;
+          nextSub  = 1; // next quarter, notes first
+        }
+      } else {
+        nextSub = subLevel;
+      }
+      const maxLevel = (nextBase + nextSub * 0.1).toFixed(1);
+      return "pitch.html?menu=true&maxLevel=" + maxLevel + "&bestLevel=" + bestScore.level.toFixed(1);
+    }
+
     // Builds the menu URL for Staff Hero module cards with level locking.
     function buildStaffHeroMenuUrl(bestScore) {
       if (!bestScore || bestScore.level === 0) return "staffhero.html?menu=true&maxLevel=1&bestLevel=0";
       const baseLevel = Math.floor(bestScore.level);
       return "staffhero.html?menu=true&maxLevel=" + (baseLevel + 1) + "&bestLevel=" + baseLevel;
+    }
+
+    // Pitch Up Next URL: goes straight to the quiz at the suggested level
+    function buildPitchUrl(bestScore) {
+      const instrName = sessionStorage.getItem('studentInstrument') || 'Violin';
+      const isOrch    = getEnsembleForInstrument(instrName) === 'orchestra';
+      if (!bestScore || bestScore.level === 0) return "pitch.html?level=1.1";
+      const threshold = MASTERY_THRESHOLD["pitch.html"] ?? DEFAULT_THRESHOLD;
+      const baseLevel = Math.floor(bestScore.level);
+      const subLevel  = Math.round((bestScore.level - baseLevel) * 10);
+      let nextBase = baseLevel, nextSub;
+      if (bestScore.bestPercent >= threshold) {
+        if (isOrch && subLevel === 1) { nextSub = 2; }
+        else { nextBase = baseLevel + 1; nextSub = 1; }
+      } else { nextSub = subLevel; }
+      return "pitch.html?level=" + (nextBase + nextSub * 0.1).toFixed(1);
     }
 
     // Rhythm uses float levels: 1.1=trainer, 1.2=moderate, 1.3=fast, 2.1=next level trainer...
