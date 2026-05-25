@@ -308,14 +308,6 @@
     cursor: default;
     position: relative;
   }
-  .lvl-btn.locked::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0.55);
-    border-radius: inherit;
-    z-index: 1;
-  }
   .lvl-btn.locked .lock-icon {
     display: flex !important;
   }
@@ -326,8 +318,35 @@
     align-items: center;
     justify-content: center;
     z-index: 2;
-    font-size: 1.6rem;
     pointer-events: none;
+    background: rgba(59, 110, 248, 0.08);
+    border-radius: inherit;
+  }
+  .lock-icon svg {
+    opacity: 0.35;
+  }
+
+  /* ── Locked modal options ── */
+  .modal-opt.locked {
+    pointer-events: none;
+    cursor: default;
+    position: relative;
+  }
+  .modal-opt.locked .modal-lock {
+    display: flex !important;
+  }
+  .modal-lock {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    background: rgba(59, 110, 248, 0.08);
+    border-radius: inherit;
+  }
+  .modal-lock svg {
+    opacity: 0.35;
   }
 </style>
 </head>
@@ -739,6 +758,7 @@ const _urlLevel  = parseInt(_urlParams.get('level'))   || null;
 const _urlMode   = _urlParams.get('mode')              || null;
 const _urlMenu   = _urlParams.get('menu') === 'true';
 const _maxLevel  = parseFloat(_urlParams.get('maxLevel')) || null;
+const _bestLevel = parseFloat(_urlParams.get('bestLevel')) || 0;
 
 // Tracks the current sub-level mode (trainer / moderate / fast)
 let currentMode = 'moderate';
@@ -764,15 +784,69 @@ function applyLevelLocks() {
       if (!btn.querySelector('.lock-icon')) {
         const icon = document.createElement('span');
         icon.className = 'lock-icon';
-        icon.textContent = '🔒';
+        icon.innerHTML = `<svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="18" width="32" height="24" rx="4" fill="#3b6ef8"/>
+          <path d="M10 18V13C10 8.03 13.13 4 18 4C22.87 4 26 8.03 26 13V18" stroke="#3b6ef8" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <circle cx="18" cy="30" r="3.5" fill="white"/>
+          <rect x="16.25" y="30" width="3.5" height="5" rx="1" fill="white"/>
+        </svg>`;
         btn.appendChild(icon);
       }
     }
   }
 }
 
-// Modal sub-level locking removed — locking is at the level button level only.
-function applyModalLocks(lvl) {}
+// Locks modal sub-levels based on sequential progression.
+// Rules:
+//   level < bestBase:      all accessible (already passed)
+//   level = bestBase:      sub-levels up to bestSub accessible, rest locked
+//   level = bestBase + 1:  only Trainer accessible (first time at this level)
+//   level > bestBase + 1:  button was already locked (shouldn't reach here)
+function applyModalLocks(lvl) {
+  const opts     = document.querySelectorAll('.modal-opt');
+  const bestBase = Math.floor(_bestLevel);
+  const bestSub  = Math.round((_bestLevel - bestBase) * 10); // 1,2,3
+
+  opts.forEach((opt, i) => {
+    const subOffset = i + 1; // Trainer=1, Moderate=2, Fast=3
+    let locked = false;
+
+    if (_bestLevel === 0) {
+      // Never played — only Trainer accessible at level 1, rest locked
+      locked = !(lvl === 1 && subOffset === 1);
+    } else if (lvl < bestBase) {
+      locked = false; // below best — all open
+    } else if (lvl === bestBase) {
+      locked = subOffset > bestSub; // up to their best sub-level
+    } else if (lvl === bestBase + 1) {
+      locked = subOffset > 1; // one above best — Trainer only
+    } else {
+      locked = true; // shouldn't be reachable but just in case
+    }
+
+    opt.classList.toggle('locked', locked);
+
+    // Add/remove lock overlay
+    let lockEl = opt.querySelector('.modal-lock');
+    if (locked) {
+      if (!lockEl) {
+        lockEl = document.createElement('span');
+        lockEl.className = 'modal-lock';
+        lockEl.innerHTML = `<svg width="22" height="28" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="18" width="32" height="24" rx="4" fill="#3b6ef8"/>
+          <path d="M10 18V13C10 8.03 13.13 4 18 4C22.87 4 26 8.03 26 13V18" stroke="#3b6ef8" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <circle cx="18" cy="30" r="3.5" fill="white"/>
+          <rect x="16.25" y="30" width="3.5" height="5" rx="1" fill="white"/>
+        </svg>`;
+        opt.style.position = 'relative';
+        opt.appendChild(lockEl);
+      }
+      lockEl.style.display = 'flex';
+    } else if (lockEl) {
+      lockEl.style.display = 'none';
+    }
+  });
+}
 
 // Called on page load — jump straight to level/mode if URL params present
 function initApp() {
