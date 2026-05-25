@@ -1584,6 +1584,7 @@ let pendingLevel = 1;
 function openModal(lvl) {
   pendingLevel = lvl;
   document.getElementById('modal-title').textContent = LEVELS[lvl].label.replace(/ —.*/, '');
+  applyModalLocks(lvl);
   document.getElementById('level-modal').style.display = 'flex';
 }
 
