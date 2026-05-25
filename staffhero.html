@@ -81,6 +81,9 @@ if (!_sessionNumber) { window.location.href = 'index.html'; throw new Error('No 
 
 const _urlParams    = new URLSearchParams(window.location.search);
 const _urlLevel     = parseInt(_urlParams.get('level')) || 1;
+const _urlMenu      = _urlParams.get('menu') === 'true';
+const _maxLevel     = parseInt(_urlParams.get('maxLevel')) || null;
+const _bestLevel    = parseInt(_urlParams.get('bestLevel')) || 0;
 const _sessionInstr = sessionStorage.getItem('studentInstrument') || 'Violin';
 
 // Tracks the status of the auto-submit call displayed on score cards
@@ -1577,7 +1580,7 @@ function generateLevel() {
 
 // ─── SCREEN STATE ─────────────────────────────────────────────────────────────
 // 'title' | 'levelPreview' | 'playing'
-let gameState = 'levelPreview';
+let gameState = _urlMenu ? 'levelSelect' : 'levelPreview';
 let currentLevel = _urlLevel;
 let selectedInstrument = _sessionInstr;
 // Clamp currentLevel to valid range for this instrument (set after level defs load)
@@ -3221,6 +3224,56 @@ function getLevelRangeStr(levelDef) {
   return firstFull + ' – ' + lastFull;
 }
 
+// Draws a yellow padlock on the canvas — used for locked level cards
+function drawLockIcon(cx, cy, size) {
+  const s = size;
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+
+  // Shackle (arc on top)
+  ctx.beginPath();
+  ctx.arc(cx, cy - s * 0.35, s * 0.38, Math.PI, 0, false);
+  ctx.strokeStyle = '#ffe066';
+  ctx.lineWidth   = s * 0.18;
+  ctx.lineCap     = 'round';
+  ctx.stroke();
+
+  // Body (rounded rect)
+  const bW = s * 0.9, bH = s * 0.65;
+  const bX = cx - bW / 2, bY = cy - s * 0.1;
+  const r  = s * 0.12;
+  ctx.beginPath();
+  ctx.moveTo(bX + r, bY);
+  ctx.lineTo(bX + bW - r, bY);
+  ctx.quadraticCurveTo(bX + bW, bY, bX + bW, bY + r);
+  ctx.lineTo(bX + bW, bY + bH - r);
+  ctx.quadraticCurveTo(bX + bW, bY + bH, bX + bW - r, bY + bH);
+  ctx.lineTo(bX + r, bY + bH);
+  ctx.quadraticCurveTo(bX, bY + bH, bX, bY + bH - r);
+  ctx.lineTo(bX, bY + r);
+  ctx.quadraticCurveTo(bX, bY, bX + r, bY);
+  ctx.closePath();
+  ctx.fillStyle = '#ffe066';
+  ctx.fill();
+
+  // Keyhole circle
+  ctx.beginPath();
+  ctx.arc(cx, bY + bH * 0.38, s * 0.1, 0, Math.PI * 2);
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fill();
+
+  // Keyhole stem
+  ctx.beginPath();
+  ctx.moveTo(cx, bY + bH * 0.45);
+  ctx.lineTo(cx, bY + bH * 0.72);
+  ctx.strokeStyle = '#0a0a1a';
+  ctx.lineWidth   = s * 0.1;
+  ctx.lineCap     = 'round';
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function drawLevelSelectScreen() {
   ctx.fillStyle = '#0a0a1a';
   ctx.fillRect(0, 0, W, H);
@@ -3317,7 +3370,14 @@ function drawLevelSelectScreen() {
       ctx.fillText(levelDef.title, cx + cardW / 2, cy + cardH / 2 + 4);
     }
 
-    levelSelectBtns.push({ level: lvl, x: cx, y: cy, w: cardW, h: cardH });
+    levelSelectBtns.push({ level: lvl, x: cx, y: cy, w: cardW, h: cardH, locked: _maxLevel && lvl > _maxLevel });
+
+    // Draw lock overlay if level is locked
+    if (_maxLevel && lvl > _maxLevel) {
+      ctx.fillStyle = 'rgba(255, 224, 102, 0.12)';
+      ctx.fillRect(cx, cy, cardW, cardH);
+      drawLockIcon(cx + cardW / 2, cy + cardH / 2 - 2, 26);
+    }
   });
 
   // Ultimate Challenge card — shown below regular level cards
@@ -4418,7 +4478,7 @@ canvas.addEventListener('mousemove', (e) => {
   } else if (gameState === 'levelSelect') {
     for (const btn of levelSelectBtns) {
       if (hitTest(pos, btn)) {
-        hoveredBtn = btn.level === UC_LEVEL ? 'UC' : `LVLSEL_${btn.level}`;
+        if (!btn.locked) hoveredBtn = btn.level === UC_LEVEL ? 'UC' : `LVLSEL_${btn.level}`;
         break;
       }
     }
@@ -4505,15 +4565,17 @@ canvas.addEventListener('click', (e) => {
     if (octaveBackBtn && hitTest(pos, octaveBackBtn)) { gameState = 'title'; hoveredBtn = null; return; }
   } else if (gameState === 'levelSelect') {
     if (levelSelectBackBtn && hitTest(pos, levelSelectBackBtn)) {
+      if (_urlMenu) { window.location.href = 'dashboard.html'; return; }
       gameState = 'title';
       hoveredBtn = null;
       return;
     }
     for (const btn of levelSelectBtns) {
       if (hitTest(pos, btn)) {
+        if (btn.locked) { hoveredBtn = null; return; } // locked — ignore click
         if (btn.level === UC_LEVEL) {
           ucActive = true;
-          currentLevel = 1; // UC uses level 1 key sig initially
+          currentLevel = 1;
           gameState = 'playing';
           score = 0;
           startPlaying();
