@@ -5,17 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rhythm Reader</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
 
   :root {
-    --cream: #f7f3ec;
-    --parchment: #ede7d9;
-    --navy: #1a2744;
-    --navy-mid: #2c3e6b;
-    --gold: #c8973a;
-    --gold-light: #e8b84b;
-    --green: #2d7a5f;
-    --red: #b03a2e;
+    --bg:         #f0f4ff;
+    --surface:    #ffffff;
+    --blue:       #3b6ef8;
+    --blue-dark:  #2a5ce0;
+    --blue-light: #e8effe;
+    --text:       #1a1f36;
+    --muted:      #6b7280;
+    --border:     #dde3f0;
+    --green:      #2f855a;
+    --red:        #c53030;
+    /* legacy aliases kept for any remaining references */
+    --cream:      #f0f4ff;
+    --parchment:  #dde3f0;
+    --navy:       #1a1f36;
+    --navy-mid:   #2a5ce0;
+    --gold:       #3b6ef8;
+    --gold-light: #e8effe;
     --text: #1a1a2e;
     --muted: #6b6b8a;
     --ink: #1a1a2e;
@@ -24,7 +33,11 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background-color: var(--cream);
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
     background-image: repeating-linear-gradient(transparent, transparent 39px, #c8c0b0 39px, #c8c0b0 40px);
     min-height: 100vh;
     display: flex;
@@ -38,9 +51,9 @@
   }
 
   h1 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Serif Display', serif;
     font-size: clamp(1.6rem, 5vw, 2.2rem);
-    color: var(--navy);
+    color: var(--text);
     text-align: center;
     margin-bottom: 1.5rem;
     letter-spacing: 0.01em;
@@ -57,7 +70,7 @@
   }
   .lvl-btn {
     width: 100%; background: white;
-    border: 2px solid var(--parchment);
+    border: 2px solid var(--border);
     border-radius: 14px; padding: 1rem 1.25rem;
     cursor: pointer; text-align: left;
     display: flex; align-items: center; gap: 1rem;
@@ -66,14 +79,14 @@
     box-sizing: border-box;
   }
   .lvl-btn:hover {
-    border-color: var(--navy);
+    border-color: var(--text);
     box-shadow: 0 4px 16px rgba(26,39,68,.12);
     transform: translateY(-2px);
   }
   .lvl-num {
     width: 44px; height: 44px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Playfair Display', serif; font-size: 1.4rem;
+    font-family: 'DM Serif Display', serif; font-size: 1.4rem;
     color: #fff; flex-shrink: 0;
   }
   .l1 .lvl-num { background: linear-gradient(135deg,#2d7a5f,#1a2744); }
@@ -87,11 +100,11 @@
   .l9 .lvl-num { background: linear-gradient(135deg,#2c3e6b,#c8973a); }
   .l10 .lvl-num { background: linear-gradient(135deg,#b03a2e,#2d7a5f); font-size: 1.1rem; }
   .challenge-btn {
-    border-color: var(--gold) !important;
+    border-color: var(--blue) !important;
     background: linear-gradient(135deg, #fffdf5, #fff8e8) !important;
   }
   .challenge-btn:hover {
-    border-color: var(--navy) !important;
+    border-color: var(--text) !important;
     background: white !important;
   }
   .lvl-pair {
@@ -104,7 +117,7 @@
     max-width: 100%;
   }
   .lvl-info { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
-  .lvl-info h3 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: .95rem; color: var(--navy); margin-bottom: 0; }
+  .lvl-info h3 { font-family: 'DM Serif Display', serif; font-weight: 700; font-size: .95rem; color: var(--text); margin-bottom: 0; }
   .lvl-info p  { font-size: .8rem; color: var(--muted); margin: 0; }
   .lvl-info svg { display: block; margin: 6px auto 0; }
 
@@ -118,29 +131,29 @@
     width: 100%; margin-bottom: .75rem;
   }
   .lvl-badge {
-    font-size: .75rem; font-weight: 700; color: var(--gold);
+    font-size: .75rem; font-weight: 700; color: var(--blue);
     letter-spacing: .08em; text-transform: uppercase;
   }
   .rhy-counter { font-size: .75rem; font-weight: 500; color: var(--muted); }
   .progress-dots { display: flex; gap: 6px; align-items: center; }
   .pdot {
     width: 11px; height: 11px; border-radius: 50%;
-    background: var(--parchment); border: 1.5px solid #c8bfb0; transition: all .3s;
+    background: var(--border); border: 1.5px solid #c8bfb0; transition: all .3s;
   }
-  .pdot.current  { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,151,58,.2); }
+  .pdot.current  { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 3px rgba(200,151,58,.2); }
   .pdot.scored-a { background: var(--green); border-color: var(--green); }
   .pdot.scored-b { background: #2d7a8a; border-color: #2d7a8a; }
-  .pdot.scored-c { background: var(--gold); border-color: var(--gold); }
+  .pdot.scored-c { background: var(--blue); border-color: var(--blue); }
   .pdot.scored-d { background: var(--red); border-color: var(--red); }
 
   #score-display {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700; font-size: 1.2rem; color: var(--navy);
+    font-family: 'DM Serif Display', serif;
+    font-weight: 700; font-size: 1.2rem; color: var(--text);
     margin-bottom: 1rem; min-height: 1.6rem; text-align: center;
   }
   .staff-wrap {
     background: white;
-    border: 2px solid var(--parchment);
+    border: 2px solid var(--border);
     border-radius: 14px; padding: 1rem 1.5rem;
     width: 100%;
     box-shadow: 0 4px 16px rgba(26,39,68,.08);
@@ -153,9 +166,9 @@
     margin-bottom: .75rem;
   }
   #countdown-word {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Serif Display', serif;
     font-size: 3.2rem; font-weight: 700;
-    color: var(--gold);
+    color: var(--blue);
     opacity: 0; transform: scale(0.7);
     transition: opacity .08s, transform .08s;
     letter-spacing: 0.04em;
@@ -168,10 +181,10 @@
     letter-spacing: .08em; text-transform: uppercase; text-align: center;
     min-height: 1.4rem; margin-bottom: .75rem;
   }
-  #status.active { color: var(--navy); }
+  #status.active { color: var(--text); }
   #status.go     { color: var(--green); font-weight: 700; }
-  #status.done   { color: var(--navy); font-weight: 700; }
-  #status.listen { color: var(--gold); font-weight: 700; }
+  #status.done   { color: var(--text); font-weight: 700; }
+  #status.listen { color: var(--blue); font-weight: 700; }
 
   .tap-flash {
     position: fixed; inset: 0; pointer-events: none; z-index: 100;
@@ -181,7 +194,7 @@
 
   #btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
   #btn {
-    background: var(--navy);
+    background: var(--text);
     border: none; color: white;
     font-family: 'DM Sans', sans-serif; font-weight: 700;
     font-size: 1rem; letter-spacing: .04em;
@@ -191,19 +204,19 @@
     box-shadow: 0 4px 16px rgba(26,39,68,.25);
     margin-top: .25rem;
   }
-  #btn:hover  { background: var(--navy-mid); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,39,68,.3); }
+  #btn:hover  { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,39,68,.3); }
   #btn:active { transform: translateY(0); }
 
   .game-nav-btns {
     display: flex; gap: .5rem; justify-content: center; margin-top: .5rem;
   }
   .game-nav-btn {
-    background: none; border: 1.5px solid var(--gold); color: var(--gold);
+    background: none; border: 1.5px solid var(--blue); color: var(--blue);
     font-family: 'DM Sans', sans-serif; font-size: .75rem; font-weight: 600;
     padding: .35rem 1rem; border-radius: 20px; cursor: pointer;
     letter-spacing: .04em; transition: background .15s, color .15s;
   }
-  .game-nav-btn:hover { background: var(--gold); color: white; }
+  .game-nav-btn:hover { background: var(--blue); color: white; }
   .game-nav-btn:disabled { opacity: 0.25; cursor: default; pointer-events: none; }
   #result-detail {
     font-size: .8rem; font-weight: 500; color: var(--muted);
@@ -218,18 +231,18 @@
   .res-card {
     background: white; border-radius: 16px; padding: 2rem 2rem 1.5rem; width: 100%;
     box-shadow: 0 4px 16px rgba(26,39,68,.1); text-align: center;
-    border: 2px solid var(--parchment);
+    border: 2px solid var(--border);
   }
   .res-card h2 {
-    font-family: 'Playfair Display', serif; font-size: 1.6rem;
-    color: var(--navy); margin-bottom: .2rem;
+    font-family: 'DM Serif Display', serif; font-size: 1.6rem;
+    color: var(--text); margin-bottom: .2rem;
   }
   .res-lvl-label {
     font-size: .75rem; font-weight: 600; color: var(--muted);
     text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1.5rem;
   }
   .avg-score {
-    font-family: 'Playfair Display', serif; font-size: 4rem;
+    font-family: 'DM Serif Display', serif; font-size: 4rem;
     line-height: 1; margin-bottom: .2rem;
   }
   .avg-label {
@@ -238,11 +251,11 @@
   }
   .grade-a { color: var(--green); }
   .grade-b { color: #2d7a8a; }
-  .grade-c { color: var(--gold); }
+  .grade-c { color: var(--blue); }
   .grade-d { color: var(--red); }
   .bars { display: flex; justify-content: center; gap: .6rem; align-items: flex-end; margin-bottom: .5rem; }
   .bar-wrap  { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .bar-track { width: 32px; height: 64px; background: var(--parchment); border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; }
+  .bar-track { width: 32px; height: 64px; background: var(--border); border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; }
   .bar-fill  { width: 100%; border-radius: 6px; transition: height .7s cubic-bezier(.34,1.56,.64,1); }
   .bar-pct   { font-size: .7rem; font-weight: 700; color: var(--muted); }
   .bar-n     { font-size: .7rem; color: var(--muted); }
@@ -262,8 +275,8 @@
     animation: slideUp .25s ease;
   }
   .modal-title {
-    font-family: 'Playfair Display', serif; font-size: 1.3rem;
-    color: var(--navy); text-align: center; margin-bottom: .2rem;
+    font-family: 'DM Serif Display', serif; font-size: 1.3rem;
+    color: var(--text); text-align: center; margin-bottom: .2rem;
   }
   .modal-sub {
     font-size: .82rem; color: var(--muted); text-align: center;
@@ -272,21 +285,21 @@
   .modal-options { display: flex; flex-direction: column; gap: .6rem; }
   .modal-opt {
     display: flex; align-items: center; gap: .85rem;
-    background: var(--cream); border: 2px solid var(--parchment);
+    background: var(--surface); border: 2px solid var(--border);
     border-radius: 12px; padding: .85rem 1rem;
     cursor: pointer; transition: all .18s ease; text-align: left; width: 100%;
   }
-  .modal-opt:hover { background: white; border-color: var(--navy); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,39,68,.1); }
+  .modal-opt:hover { background: white; border-color: var(--text); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,39,68,.1); }
   .modal-opt-icon  { font-size: 1.4rem; flex-shrink: 0; }
-  .modal-opt-label { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--navy); font-weight: 700; flex: 1; }
+  .modal-opt-label { font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--text); font-weight: 700; flex: 1; }
   .modal-opt-bpm   { font-size: .78rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
   .modal-cancel {
     display: block; width: 100%; margin-top: .85rem; padding: .7rem;
-    background: none; border: 1.5px solid var(--parchment); border-radius: 10px;
+    background: none; border: 1.5px solid var(--border); border-radius: 10px;
     font-family: 'DM Sans', sans-serif; font-size: .9rem; color: var(--muted);
     cursor: pointer; transition: all .15s;
   }
-  .modal-cancel:hover { border-color: var(--navy); color: var(--navy); }
+  .modal-cancel:hover { border-color: var(--text); color: var(--text); }
 
 </style>
 </head>
@@ -300,7 +313,7 @@
 <div id="menu-screen">
   <p class="menu-sub">Choose a level to begin</p>
   <div style="text-align:center;margin-bottom:.75rem;">
-    <a href="dashboard.html" style="font-size:.82rem;color:var(--gold);font-weight:600;text-decoration:none;">← Back to Dashboard</a>
+    <a href="dashboard.html" style="font-size:.82rem;color:var(--blue);font-weight:600;text-decoration:none;">← Back to Dashboard</a>
   </div>
 
   <button class="lvl-btn l1" onclick="openModal(1)">
@@ -650,8 +663,8 @@
     <div class="submit-status" id="submit-status" style="margin-top:.75rem"></div>
   </div>
   <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem;">
-    <button style="padding:.75rem 1.8rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;border:none;background:var(--navy);color:white;box-shadow:0 4px 16px rgba(26,39,68,.25);" onclick="retryLevel()">Try Again</button>
-    <button style="padding:.75rem 1.8rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;border:2px solid var(--parchment);background:var(--parchment);color:var(--navy);" onclick="window.location.href='dashboard.html'">Dashboard</button>
+    <button style="padding:.75rem 1.8rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;border:none;background:var(--text);color:white;box-shadow:0 4px 16px rgba(26,39,68,.25);" onclick="retryLevel()">Try Again</button>
+    <button style="padding:.75rem 1.8rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;border:2px solid var(--border);background:var(--border);color:var(--text);" onclick="window.location.href='dashboard.html'">Dashboard</button>
   </div>
 </div>
 
@@ -906,7 +919,7 @@ function showResults() {
   barsEl.innerHTML = '';
   levelScores.forEach((s, i) => {
     const gc2 = 'grade-' + (s >= 80 ? 'a' : s >= 60 ? 'b' : s >= 40 ? 'c' : 'd');
-    const fillColor = s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--teal)' : s >= 40 ? 'var(--gold)' : 'var(--accent)';
+    const fillColor = s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--teal)' : s >= 40 ? 'var(--blue)' : 'var(--accent)';
     barsEl.innerHTML +=
       '<div class="bar-wrap">' +
         '<div class="bar-pct ' + gc2 + '">' + s + '%</div>' +
