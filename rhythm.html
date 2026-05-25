@@ -304,40 +304,30 @@
 
   /* ── Locked level buttons ── */
   .lvl-btn.locked {
-    opacity: 0.55;
-    cursor: not-allowed;
     pointer-events: none;
+    cursor: default;
     position: relative;
   }
   .lvl-btn.locked::after {
-    content: '🔒';
+    content: '';
     position: absolute;
-    top: 8px;
-    right: 10px;
-    font-size: 1rem;
-    opacity: 0.8;
+    inset: 0;
+    background: rgba(255,255,255,0.55);
+    border-radius: inherit;
+    z-index: 1;
   }
-  .lvl-btn.locked .lvl-num {
-    filter: grayscale(0.7);
+  .lvl-btn.locked .lock-icon {
+    display: flex !important;
   }
-  .lvl-btn.locked .lvl-info h3 {
-    color: var(--muted);
-  }
-
-  /* ── Locked modal options ── */
-  .modal-opt.locked {
-    opacity: 0.45;
-    cursor: not-allowed;
+  .lock-icon {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    font-size: 1.6rem;
     pointer-events: none;
-    position: relative;
-  }
-  .modal-opt.locked::after {
-    content: '🔒';
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1rem;
   }
 </style>
 </head>
@@ -760,30 +750,29 @@ function decimalLevel() {
   return (base + offset).toFixed(1);
 }
 
-// Applies lock styling to level buttons and modal options based on _maxLevel
+// Applies transparent lock overlay to level buttons above student's max accessible level.
+// maxLevel = floor(bestScore.level) + 1, passed as integer in URL param.
 function applyLevelLocks() {
   if (!_maxLevel) return;
-  const maxBase = Math.floor(_maxLevel);
-  document.querySelectorAll('.lvl-btn').forEach(btn => {
-    const match = btn.className.match(/l(\d+)/);
-    if (!match) return;
-    const lvl = parseInt(match[1]);
-    if (lvl > maxBase) btn.classList.add('locked');
-  });
+  const maxBase = parseInt(_maxLevel); // levels up to this are accessible
+  for (let i = 1; i <= 10; i++) {
+    const btn = document.querySelector('.lvl-btn.l' + i);
+    if (!btn) continue;
+    if (i > maxBase) {
+      btn.classList.add('locked');
+      // Add lock icon span if not already there
+      if (!btn.querySelector('.lock-icon')) {
+        const icon = document.createElement('span');
+        icon.className = 'lock-icon';
+        icon.textContent = '🔒';
+        btn.appendChild(icon);
+      }
+    }
+  }
 }
 
-// Applies sub-level locks to modal options for the boundary level
-function applyModalLocks(lvl) {
-  if (!_maxLevel) return;
-  const maxBase = Math.floor(_maxLevel);
-  const maxSub  = Math.round((_maxLevel - maxBase) * 10); // 1=trainer,2=moderate,3=fast
-  const opts    = document.querySelectorAll('.modal-opt');
-  opts.forEach((opt, i) => {
-    const subOffset = i + 1; // 0=trainer(1), 1=moderate(2), 2=fast(3)
-    const isLocked  = lvl > maxBase || (lvl === maxBase && subOffset > maxSub);
-    opt.classList.toggle('locked', isLocked);
-  });
-}
+// Modal sub-level locking removed — locking is at the level button level only.
+function applyModalLocks(lvl) {}
 
 // Called on page load — jump straight to level/mode if URL params present
 function initApp() {
