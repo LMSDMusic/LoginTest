@@ -4466,7 +4466,7 @@ function _renderHomeContent() {
       <div class="folder-cards">
         ${ENSEMBLES.map(e => {
           const gc = e.colorClass;
-          return `<div class="folder-card ${gc}" onclick="renderGrade('${e.id}')">
+          return `<div class="folder-card ${gc}" onclick="renderLevelMenu()">
             <div class="folder-icon">${e.icon}</div>
             <div class="folder-info">
               <div class="folder-title">${e.title}</div>
@@ -4503,7 +4503,7 @@ function _renderGradeContent(ensembleId) {
       <div class="folder-cards">
         ${GRADES.map(grade => {
           const hasData = (ensembleId === 'orchestra' && grade === '5th') || (ensembleId === 'band' && grade === '5th') || (ensembleId === 'chorus' && grade === '5th');
-          return `<div class="folder-card ${cc}" onclick="renderInstrument('${ensembleId}', '${grade}')">
+          return `<div class="folder-card ${cc}" onclick="renderLevelMenu()">
             <div class="folder-icon" style="font-size:1.1rem;font-family:'DM Sans',sans-serif;font-weight:700;">${grade}</div>
             <div class="folder-info">
               <div class="folder-title">${grade} Grade</div>
@@ -4537,7 +4537,7 @@ function _renderInstrumentContent(ensembleId, grade) {
         ${grade} Grade
       </h1>
       <div class="header-right">
-        <button class="back-btn" onclick="renderGrade('${ensembleId}')">← Back</button>
+        <button class="back-btn" onclick="renderLevelMenu()">← Back</button>
       </div>
     </div>
     ${infoCardHTML()}
@@ -4547,7 +4547,7 @@ function _renderInstrumentContent(ensembleId, grade) {
       <div class="quiz-cards">
         ${INSTRUMENTS.filter(inst => inst.ensembleId === ensembleId).map(inst => {
           const ic = inst.colorClass;
-          return `<div class="quiz-card ${ic}" onclick="renderQuarters('${ensembleId}', '${grade}', '${inst.id}')">
+          return `<div class="quiz-card ${ic}" onclick="renderLevelMenu()">
             <div class="quiz-card-icon">${inst.icon}</div>
             <div>
               <div class="quiz-card-title">${inst.title}</div>
@@ -4656,7 +4656,7 @@ function _renderQuartersContent(ensembleId, grade, instrumentId) {
         instTitle +
       '</h1>' +
       '<div class="header-right">' +
-        '<button class="back-btn" onclick="renderInstrument(\'' + ensembleId + '\',\'' + grade + '\')">\u2190 Back</button>' +
+        '<button class="back-btn" onclick="renderLevelMenu()">\u2190 Back</button>' +
       '</div>' +
     '</div>' +
     infoCardHTML() +
@@ -4825,10 +4825,7 @@ function renderTrainer(animateNewNote) {
       '</h1>' +
       '<div class="header-right">' +
         '<span class="key-badge">' + clefLabel + '</span>' +
-        '<button class="back-btn" onclick="renderQuarters(\'' +
-          (activeEnsemble ? activeEnsemble.id : 'orchestra') + '\',\'' +
-          (activeGrade || '5th') + '\',\'' +
-          (activeInstrument ? activeInstrument.id : 'violin') + '\')">✕ Exit</button>' +
+        '<button class="back-btn" onclick="renderLevelMenu()">✕ Exit</button>' +
       '</div>' +
     '</div>' +
     '<div class="trainer-progress" id="trainer-progress">' + pipsHtml + '</div>' +
@@ -4938,10 +4935,7 @@ function showCongratsOverlay() {
       '<div class="congrats-title">Congratulations!</div>' +
       '<div class="congrats-sub">You\'ve learned all ' + trainerNotes.length +
         ' notes in ' + trainerQuiz.title + '.<br>You\'re ready for the quiz!</div>' +
-      '<button class="congrats-btn" onclick="this.closest(\'.congrats-overlay\').remove(); renderQuarters(\'' +
-        (activeEnsemble ? activeEnsemble.id : 'orchestra') + '\',\'' +
-        (activeGrade || '5th') + '\',\'' +
-        (activeInstrument ? activeInstrument.id : 'violin') + '\')">Back to Quizzes</button>' +
+      '<button class="congrats-btn" onclick="window.location.href=\'dashboard.html\'">Dashboard</button>' +
     '</div>';
   document.body.appendChild(overlay);
 }
@@ -5271,7 +5265,7 @@ function renderQuestion() {
         </h1>
         <div class="header-right">
           <span class="key-badge" id="key-badge">${clefLabel}</span>
-          <button class="back-btn" onclick="renderQuarters(activeEnsemble.id, activeGrade, activeInstrument.id)">✕ Exit</button>
+          <button class="back-btn" onclick="renderLevelMenu()">✕ Exit</button>
         </div>
       </div>
       <div class="progress-bar-wrap">
@@ -5443,8 +5437,8 @@ function renderScore() {
       </div>
 
       <div class="score-btn-row">
-        <button class="replay-btn" onclick="launchQuiz('${activeFolder.id}', '${activeQuiz.id}')">Try Again</button>
-        <button class="menu-btn"   onclick="renderQuarters(activeEnsemble.id, activeGrade, activeInstrument.id)">← Quiz List</button>
+        <button class="replay-btn" onclick="launchQuiz('${activeFolder.id}', '${activeQuiz.id}')">Retry</button>
+        <button class="menu-btn"   onclick="window.location.href='dashboard.html'">Dashboard</button>
       </div>
     </div>
   `;
