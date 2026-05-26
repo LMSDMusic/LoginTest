@@ -46,7 +46,7 @@
     .shell {
       max-width: 680px;
       margin: 0 auto;
-      padding: 32px 20px 60px;
+      padding: 2px 20px 60px;
       position: relative;
     }
 
@@ -281,6 +281,9 @@
   <div class="shell">
 
     <!-- Top bar -->
+    <div style="text-align:center;">
+      <img src="logo.png" alt="Logo" style="height:288px;object-fit:contain;" />
+    </div>
     <div class="topbar">
       <div class="greeting">
         <h1 id="greetingName">Loading…</h1>
@@ -308,9 +311,9 @@
     // Icon + color assigned by index so no sheet changes needed.
     // Add more entries here as you add more modules.
     const MODULE_THEMES = [
-      { emoji: "🎵", color: "theme-blue"   },
-      { emoji: "🎹", color: "theme-teal"   },
-      { emoji: "🥁", color: "theme-purple" },
+      { emoji: "♜",  color: "theme-blue"   },  // Staff Hero  → chess rook
+      { emoji: "🥁", color: "theme-teal"   },  // Rhythm Tap  → drums
+      { emoji: "🎵", color: "theme-purple" },  // Note ID     → eighth notes
       { emoji: "🎼", color: "theme-amber"  },
       { emoji: "🎸", color: "theme-coral"  },
       { emoji: "🎺", color: "theme-green"  },
@@ -505,7 +508,7 @@
     const MASTERY_THRESHOLD = {
       "staffhero.html" : 81,
       "rhythm.html"    : 81,
-      "pitch.html"     : 81,
+      "pitch.html"     : 81,   // module ID in sheet: note_id
     };
     const DEFAULT_THRESHOLD = 81;
 
@@ -523,12 +526,28 @@
     function buildModuleUrl(filename, bestScore) {
       if (filename === "rhythm.html") return buildRhythmUrl(bestScore);
       if (filename === "pitch.html")  return buildPitchUrl(bestScore);
+      // For staffhero: always include maxLevel + bestLevel so "Other Levels"
+      // button on the level preview screen shows the correctly locked menu.
+      if (filename === "staffhero.html") return buildStaffHeroUrl(bestScore);
       if (!bestScore || bestScore.level === 0) return filename + "?level=1";
       const threshold = MASTERY_THRESHOLD[filename] ?? DEFAULT_THRESHOLD;
       const suggestedLevel = bestScore.bestPercent >= threshold
         ? bestScore.level + 1
         : bestScore.level;
       return filename + "?level=" + suggestedLevel;
+    }
+
+    // Builds the Up Next URL for Staff Hero — includes maxLevel + bestLevel
+    // so the level preview's "Other Levels" button has lock data available.
+    function buildStaffHeroUrl(bestScore) {
+      if (!bestScore || bestScore.level === 0) {
+        return "staffhero.html?level=1&maxLevel=1&bestLevel=0";
+      }
+      const threshold    = MASTERY_THRESHOLD["staffhero.html"] ?? DEFAULT_THRESHOLD;
+      const baseLevel    = Math.floor(bestScore.level);
+      const suggested    = bestScore.bestPercent >= threshold ? baseLevel + 1 : baseLevel;
+      const maxLevel     = baseLevel + 1; // same rule as menu: one above best
+      return "staffhero.html?level=" + suggested + "&maxLevel=" + maxLevel + "&bestLevel=" + baseLevel;
     }
 
     // Builds the menu URL for rhythm module cards.

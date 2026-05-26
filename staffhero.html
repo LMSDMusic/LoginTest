@@ -2145,7 +2145,7 @@ function drawHUD() {
   if (!gameOver && !levelComplete) {
     const mbW = ucActive ? 90 : 60, mbH = 20;
     const mbX = 10, mbY = 24;
-    const mbLabel = ucActive ? 'END GAME' : 'MENU';
+    const mbLabel = ucActive ? 'END GAME' : 'DASHBOARD';
     drawNesButton(mbLabel, mbX, mbY, mbW, mbH, hoveredBtn === 'MENU_INGAME', false);
     inGameMenuBtn = { x: mbX, y: mbY, w: mbW, h: mbH };
   }
@@ -3380,36 +3380,10 @@ function drawLevelSelectScreen() {
     }
   });
 
-  // Ultimate Challenge card — shown below regular level cards
-  const ucCardW = 460, ucCardH = 54;
-  const ucCardX = W / 2 - ucCardW / 2;
-  const ucCardY = gridY + rows * (cardH + cardGapY) + 8;
-  const ucCardBottom = ucCardY + ucCardH;
-
-  ctx.fillStyle = '#000';
-  ctx.fillRect(ucCardX + 3, ucCardY + 3, ucCardW, ucCardH);
-  ctx.fillStyle = hoveredBtn === 'UC' ? '#2a1a4a' : '#12082a';
-  ctx.fillRect(ucCardX, ucCardY, ucCardW, ucCardH);
-  ctx.strokeStyle = '#ffe066';
-  ctx.lineWidth = 2;
-  // Gold dashed border for UC
-  ctx.setLineDash([6, 3]);
-  ctx.strokeRect(ucCardX, ucCardY, ucCardW, ucCardH);
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#ffe066';
-  ctx.font = '9px "Press Start 2P"';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('★ ULTIMATE CHALLENGE', ucCardX + 14, ucCardY + ucCardH / 2 - 8);
-  ctx.fillStyle = '#aaddff';
-  ctx.font = '6px "Press Start 2P"';
-  ctx.fillText('all levels · progressive · 100,000 pts to win', ucCardX + 14, ucCardY + ucCardH / 2 + 10);
-  levelSelectBtns.push({ level: UC_LEVEL, x: ucCardX, y: ucCardY, w: ucCardW, h: ucCardH });
-
-  // Back button
+  // Back button — positioned directly below last level card row
   const bbW = 120, bbH = 30;
   const bbX = W / 2 - bbW / 2;
-  const bbY = ucCardBottom + 10;
+  const bbY = gridY + rows * (cardH + cardGapY) + 18;
   drawNesButton('BACK', bbX, bbY, bbW, bbH, hoveredBtn === 'LVLSEL_BACK', false);
   levelSelectBackBtn = { x: bbX, y: bbY, w: bbW, h: bbH };
 
@@ -3904,13 +3878,10 @@ function drawLevelPreviewScreen() {
   const bkX = olX + rowBtnW + rowGap;
   drawNesButton('OTHER LEVELS', olX, rowY, rowBtnW, rowBtnH, hoveredBtn === 'OTHER_LEVELS', false);
   otherLevelsBtn = { x: olX, y: rowY, w: rowBtnW, h: rowBtnH };
-  drawNesButton('BACK', bkX, rowY, rowBtnW, rowBtnH, hoveredBtn === 'PREVIEW_BACK', false);
+  drawNesButton('DASHBOARD', bkX, rowY, rowBtnW, rowBtnH, hoveredBtn === 'PREVIEW_BACK', false);
   previewBackBtn = { x: bkX, y: rowY, w: rowBtnW, h: rowBtnH };
 
-  ctx.fillStyle = '#555';
-  ctx.font = '6px "Press Start 2P"';
-  ctx.textAlign = 'center';
-  ctx.fillText('OR PRESS ENTER', W / 2, sbY + sbH + rowBtnH + 22);
+
 
   // MIDI status indicator for Piano
   if (selectedInstrument === 'Piano') {
@@ -4044,7 +4015,7 @@ function drawUcScoreCard() {
     ucScoreCardRetryBtn = null;
   }
 
-  drawNesButton('MENU', bx, btnY, btnW, btnH, hoveredBtn === 'UC_MENU', false);
+  drawNesButton('DASHBOARD', bx, btnY, btnW, btnH, hoveredBtn === 'UC_MENU', false);
   ucScoreCardMenuBtn = { x: bx, y: btnY, w: btnW, h: btnH };
 }
 
@@ -4358,7 +4329,7 @@ function draw(dt) {
     const goMenuX = retryX + goBtnW + goBtnGap;
     drawNesButton('RETRY', retryX, goBtnY, goBtnW, goBtnH, hoveredBtn === 'RETRY', false);
     retryBtn = { x: retryX, y: goBtnY, w: goBtnW, h: goBtnH };
-    drawNesButton('MENU', goMenuX, goBtnY, goBtnW, goBtnH, hoveredBtn === 'MENU_GO', false);
+    drawNesButton('DASHBOARD', goMenuX, goBtnY, goBtnW, goBtnH, hoveredBtn === 'MENU_GO', false);
     goMenuBtn = { x: goMenuX, y: goBtnY, w: goBtnW, h: goBtnH };
   }
 
@@ -4420,7 +4391,7 @@ function draw(dt) {
     const btnY2 = cY + cH - 48;
 
     let bx2 = btnStartX2;
-    drawNesButton('MENU', bx2, btnY2, btnW2, btnH2, hoveredBtn === 'LVL_MENU', false);
+    drawNesButton('DASHBOARD', bx2, btnY2, btnW2, btnH2, hoveredBtn === 'LVL_MENU', false);
     lvlCardMenuBtn = { x: bx2, y: btnY2, w: btnW2, h: btnH2 };
     bx2 += btnW2 + btnGap2;
 
